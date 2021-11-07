@@ -1,0 +1,12 @@
+{
+    "configurations": [
+
+        {
+            "name": "Python: Bytecode Analyzer",
+            "type": "python",
+            "request": "launch",
+            "program": "bytecode_analyzer.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}
