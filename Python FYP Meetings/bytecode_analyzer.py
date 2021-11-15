@@ -32,6 +32,7 @@ def incFunction(n):
 
 
 def funcF(x):
+    
     def funcInc():
         # declaration of a nonlocal variable
         nonlocal x
@@ -50,6 +51,7 @@ def funcF(x):
 #  .decl Statement_Next(statement: Statement, statementNext: Statement)
 #  .decl Statement_Pushes(statement: Statement, n: number)
 #  .decl Statement_Pops(statement: Statement, n: number)
+#  .decl Statement_Code(statement: Statement, )
 
 
 def generate_statement_identifier(b, i):
@@ -63,7 +65,6 @@ def generate_statement_identifier(b, i):
         long: A unique identifier
     """
     return hash(b) << 8 + i
-
 
 def get_pushes(i):
     """
@@ -115,15 +116,18 @@ def get_pops(i):
     return 0
 
 def main(function):
-    """[summary]
+    """
+    Function which creates facts about a Python function for analysis.
 
     Args:
-        function ([type]): [description]
+        function (code object): This is the function code object which is passed through
 
     Returns:
-        [type]: [description]
+        dict(set,set,set,set,set,set,set): A dictionary of sets corresponding to fact_dict
     """
     global inner_code_object_address_index
+
+    #dict_sets = init_sets()
 
     push_value = set()
     statement_opcode = set()
@@ -131,14 +135,17 @@ def main(function):
     statement_pushes = set()
     statement_pops = set()
     statement_code = set()
+    statement_metadata = set()
 
     fact_dict = dict(
-        PushValue=push_value,
-        Statement_Pushes=statement_pushes,
-        Statement_Pops=statement_pops,
-        Statement_Opcode=statement_opcode,
-        Statement_Code=statement_code,
-        Statement_Next=statement_next
+        
+        PushValue=push_value,                   # set(Statement_ID: int, Value_Pushed_To_Stack: TOS)
+        Statement_Pushes=statement_pushes,      # set(Statement_ID: int, Stack_Pushes:int)
+        Statement_Pops=statement_pops,          # set(Statement_ID: int, Stack_Pops:int)
+        Statement_Opcode=statement_opcode,      # set(Statement_ID: int, Statement_Opcode: Opcode)
+        Statement_Code=statement_code,          # set(Statement_ID: int, Statement_CodeObject: code_object)
+        Statement_Next=statement_next,          # set()
+        Statement_Metadata=statement_metadata   # set(Statement_ID: int, Source_code_line_number: int, Bytecode_offset: int Original_Index: int )
     )
 
     bytecode = dis.Bytecode(function)
@@ -146,41 +153,27 @@ def main(function):
 
     line_number_table = line_number_table_generator(bytecode)
 
-    # Initializing a line number table
-    #line_number = bytecode.first_line
-
-    #line_number_table = []
-    #split_line_number_table = split_list(bytecode.codeobj.co_lnotab, 2)
-
-    #running_offset = 0
-    #running_line = line_number
-
-    #for j, byte in enumerate(split_line_number_table):
-     #   offset = byte[0:1]
-      #  line = byte[1:2]
-
-       # running_offset += ord(offset)
-        #running_line += ord(line)
-
-        #line_number_table.append(tuple((running_offset, running_line)))
-
-    #tuple_count = 0
-
-
     for i, instruction in enumerate(bytecode):
-
-        '''BUG fix tuple_count out of range'''
 
         try:
 
             identifier = generate_statement_identifier(bytecode, i)
 
-            properties = identifier, instruction.argval #
+            properties = identifier, instruction.argval
+
+            line_number = line_number_table[0][1]
+            bytecode_offset = instruction.offset #line_number_table[l_count][0]
+
+            """
+            line_arg is in the format -> <line_number>.<bytecode_offset>
+            """
+            line_arg = line_number + bytecode_offset/10
 
             statement_opcode.add((identifier, instruction.opname ))
             statement_pushes.add((identifier, get_pushes(instruction) ))
             statement_pops.add((identifier, get_pops(instruction) ))
             statement_code.add((identifier, str(function) ))
+            statement_metadata.add((identifier,line_arg))
 
             if prev_instruction:
                 statement_next.add((identifier, generate_statement_identifier(prev_instruction, i - 1)))
@@ -245,9 +238,7 @@ def main(function):
                     d |= v
                 '''''
 
-
                 inner_code_object = list(bytecode)[i-2].argval
-                #import pdb; pdb.set_trace()
                 inner_fact_dict = main(inner_code_object)
                 for k, v in inner_fact_dict.items():
                     d = fact_dict[k]
@@ -299,8 +290,8 @@ def main(function):
 
 def init_sets():
     """
-    Function which initializes all the sets 
-    """
+    Function which initializes all the sets
+    """ 
     push_value = set()
     statement_opcode = set()
     statement_next = set()
@@ -308,7 +299,9 @@ def init_sets():
     statement_pops = set()
     statement_code = set()
     statement_metadata = set()
-
+    
+    return push_value,statement_opcode,statement_next,statement_pushes,statement_pops,statement_code, statement_metadata
+ 
 
 def split_list(lst, size):
     """
@@ -325,10 +318,65 @@ def split_list(lst, size):
         yield lst[i:i + size]
 
 
-def sort_instructions(relations):
-    code_sorted = sorted(list({v for k, v in relations['Statement_Code']}))
-    import pdb; pdb.set_trace()
-    pass
+#def sort_instructions(relations):
+#    code_sorted = sorted(list({v for k, v in relations['Statement_Code']}))
+#    import pdb; pdb.set_trace()
+#    pass
+
+def get_key(item):
+    """
+    Retrieves the key of the item to be sorted by.
+
+    Args:
+        item (int): the int used to sort the values by
+
+    Returns:
+        int: value at the index of the item key
+    """
+    return item[1]
+
+def sort_metadata(relations):
+    """Function which sorts the metadata set in the order it is disassembled in dis.dis()
+
+    Args:
+        relations (sets[]) : List of all the sets
+
+    Returns:
+        set: Statement_metadata in order
+    """
+    sorted_statement_ids = sorted(relations['Statement_Metadata'], key=get_key)
+    return sorted_statement_ids
+
+def sort_push_values(relations, statement_metadata):
+    
+    sorted_pushes = list()
+    ordered_ids = list()
+    unordered_ids = list()
+
+    dict_statement_pushes = dict(relations['PushValue'])
+    dict_size = len(dict_statement_pushes)
+
+    #new_dict = dict(zip(relations['PushValue'],[None]*len(relations['PushValue'])))
+    #new_dict_size = len(new_dict)
+
+    for tmp_tuple in statement_metadata:
+        ordered_ids.append(tmp_tuple[0])
+
+    for tmp_tuple in relations['PushValue']:
+        unordered_ids.append(tmp_tuple[0])
+
+    '''BUG There are different sizes of sorted
+    and unsorted lists'''
+
+    size_sorted = len(ordered_ids)
+    size_notsorted = len(unordered_ids)
+
+    print(dict_size)
+
+    #for i in range(dict_size):
+    #   sorted_pushes[i] = (ordered_ids[i], dict_statement_pushes[ordered_ids[i]])
+
+    #return sorted_pushes
 
 def line_number_table_generator(bytecode):
     """
@@ -363,15 +411,14 @@ def line_number_table_generator(bytecode):
 if __name__ == '__main__':
     arguments = docopt.docopt(__doc__)
     try:
-
-        # init sets
-
         # code object
         # unbound code object
 
         code_object = funcF.__code__
         out_obj = main(code_object)
-        sort_instructions(out_obj)
+        #sort_instructions(out_obj)
+        sorted_metadata = sort_metadata(out_obj)
+        sorted_push_values = sort_push_values(out_obj,sorted_metadata)
 
         # passing the function
         # out_func = main(funcF)
@@ -383,9 +430,7 @@ if __name__ == '__main__':
         pdb.post_mortem(tb)
 
 '''
-
 TODO ADD STORE_NAME
-
 
 BYTECODE TERMS
 
