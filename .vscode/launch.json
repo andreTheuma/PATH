@@ -8,7 +8,7 @@
             "name": "Python: Bytecode Analyzer",
             "type": "python",
             "request": "launch",
-            "program": "Python FYP Meetings/bytecode_analyzer.py",
+            "program": "Python FYP Meetings/project/bytecode_analyzer.py",
             "console": "integratedTerminal"
         }
     ]
