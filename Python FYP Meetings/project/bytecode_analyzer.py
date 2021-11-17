@@ -362,20 +362,27 @@ def get_key(item):
     return item[1]
 
 def sort_metadata(relations):
-    """Function which sorts the metadata set in the order it is disassembled in dis.dis()
+    """Function which sorts the metadata set in the order it is disassembled 
+    in dis.dis()
 
     Args:
-        relations (sets[]) : List of all the sets
+        relations (set[(_,_)]) : List of all the sets; Push_Values,Pop_Values,...
 
     Returns:
-        set: Statement_metadata in order
+        set(Identifier, <linenumber>.<offset>): Statement_metadata in order
     """
     sorted_statement_ids = sorted(relations['Statement_Metadata'], key=get_key)
     return sorted_statement_ids
 
 def sort_push_values(relations, statement_metadata):
-    
+    """Function which sorts the push value set in the order it is disassmbled
+
+    Args:
+        relations (set[(_,_)]): List of all the sets; Push_Values,Pop_Values,...
+        statement_metadata (Identifier, <linenumber>.<offset>): Statement Metadata tuple
+    """
     sorted_pushes = list()
+    
     ordered_ids = list()
     unordered_ids = list()
 
