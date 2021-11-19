@@ -12,6 +12,7 @@ Options:
 
 """
 import code
+from ctypes import sizeof
 import os, sys
 import docopt
 import json
@@ -63,7 +64,7 @@ def generate_statement_identifier(b, i):
         i (int): The index of the instruction
 
     Returns:
-        long: A  identifier
+        long: An identifier
     """
     return hash(b) << 8 + i
 
@@ -76,7 +77,7 @@ def generate_statement_identifier_md5(b, i):
         i (int): The index of the instruction
 
     Returns:
-        hex: An identifier
+        md5: An identifier
     """
 
     #unique hash for bytecode
@@ -112,7 +113,9 @@ def get_pushes(i):
          'LOAD_DEREF': 1,
          'INPLACE_ADD': 1,
          'STORE_DEREF': 1,
-         'LOAD_CLOSURE': 1
+         'LOAD_CLOSURE': 1,
+         'STORE_NAME': 1,
+         'LOAD_BUILD_CLASS': 1
          }
     if i.opname in d:
         return d[i.opname]
@@ -185,15 +188,16 @@ def main(function):
             identifier = generate_statement_identifier_md5(bytecode, i)
             #identifier = generate_statement_identifier(bytecode, i)
 
-            properties = identifier, instruction.argval
-
             line_number = line_number_table[0][1]
             bytecode_offset = instruction.offset #line_number_table[l_count][0]
 
             """
             line_arg is in the format -> <line_number>.<bytecode_offset>
             """
-            line_arg = line_number + bytecode_offset/10
+            line_arg = line_number + bytecode_offset/100
+
+            properties = identifier, instruction.argval #, line_arg
+            #properties = identifier,line_arg
 
             statement_opcode.add((identifier, instruction.opname ))
             statement_pushes.add((identifier, get_pushes(instruction) ))
@@ -305,7 +309,18 @@ def main(function):
                 continue
 
             if instruction.opname == 'STORE_NAME':
-                
+                push_value.add((properties))
+                #statement_pushes((identifier, 1))
+                continue
+
+            if instruction.opname == 'LOAD_BUILD_CLASS':
+                push_value.add((properties))
+                #statement_pushes((identifier, 1))
+                continue
+            
+            if instruction.opname == 'LOAD_NAME':
+                push_value.add((properties))
+                #statement_pushes((identifier, 1))
                 continue
 
         finally:
@@ -349,17 +364,19 @@ def split_list(lst, size):
 #    import pdb; pdb.set_trace()
 #    pass
 
-def get_key(item):
+def take_second_key(item):
     """
     Retrieves the key of the item to be sorted by.
 
     Args:
         item (int): the int used to sort the values by
-
     Returns:
         int: value at the index of the item key
     """
     return item[1]
+
+def take_third_key(item): 
+    return item[2]
 
 def sort_metadata(relations):
     """Function which sorts the metadata set in the order it is disassembled 
@@ -371,7 +388,7 @@ def sort_metadata(relations):
     Returns:
         set(Identifier, <linenumber>.<offset>): Statement_metadata in order
     """
-    sorted_statement_ids = sorted(relations['Statement_Metadata'], key=get_key)
+    sorted_statement_ids = sorted(relations['Statement_Metadata'], key=take_second_key)
     return sorted_statement_ids
 
 def sort_push_values(relations, statement_metadata):
@@ -381,35 +398,37 @@ def sort_push_values(relations, statement_metadata):
         relations (set[(_,_)]): List of all the sets; Push_Values,Pop_Values,...
         statement_metadata (Identifier, <linenumber>.<offset>): Statement Metadata tuple
     """
-    sorted_pushes = list()
-    
+    sorted_statement_ids = list()
+
+    dict_metadata = dict(statement_metadata)
+    dict_pushval = dict(relations['PushValue'])
+
     ordered_ids = list()
     unordered_ids = list()
 
-    dict_statement_pushes = dict(relations['PushValue'])
-    dict_size = len(dict_statement_pushes)
+    #storing the ordered IDs so as to sort the unordered IDs
+    for tuple in statement_metadata:
+        ordered_ids.append(tuple[0])
 
-    #new_dict = dict(zip(relations['PushValue'],[None]*len(relations['PushValue'])))
-    #new_dict_size = len(new_dict)
+    for tuple in relations['PushValue']:
+        unordered_ids.append(tuple[0])
 
-    for tmp_tuple in statement_metadata:
-        ordered_ids.append(tmp_tuple[0])
+    for ordered_tuple in statement_metadata:
+        line_value = ordered_tuple[1]
+        id_value = ordered_tuple[0]
 
-    for tmp_tuple in relations['PushValue']:
-        unordered_ids.append(tmp_tuple[0])
+        # if key exists obtain value
+        if id_value in unordered_ids:
+    
+            sorted_statement_ids.append((id_value,dict_pushval[id_value]))
+        
 
-    '''BUG There are different sizes of sorted
-    and unsorted lists'''
+    print (len(ordered_ids))
+    print (len(unordered_ids))
 
-    size_sorted = len(ordered_ids)
-    size_notsorted = len(unordered_ids)
 
-    print(dict_size)
 
-    #for i in range(dict_size):
-    #   sorted_pushes[i] = (ordered_ids[i], dict_statement_pushes[ordered_ids[i]])
-
-    #return sorted_pushes
+    return sorted_statement_ids
 
 def line_number_table_generator(bytecode):
     """
@@ -451,10 +470,11 @@ if __name__ == '__main__':
         out_obj = main(code_object)
         #sort_instructions(out_obj)
         sorted_metadata = sort_metadata(out_obj)
-        sorted_push_values = sort_push_values(out_obj,sorted_metadata)
-
+        #sorted_push_values = sort_push_values(out_obj,sorted_metadata)
+        sorted_push = sort_push_values(out_obj, sorted_metadata)
         # passing the function
         # out_func = main(funcF)
+        # elems = set(sorted_metadata).difference(set(sorted_push))
 
         assert False
     except Exception:
@@ -494,7 +514,7 @@ MAKE_FUNCTION -> Pushes a new function object on the stack.
                 which are found below TOS.
 STORE_FAST -> Stores TOS into the local co_varnames
 
-LOAD_BUILD_CLASS -> 
+LOAD_BUILD_CLASS -> Pushes builtins.__build_class__() onto the stack. It is later called by CALL_FUNCTION to construct a class.
 
 LOAD_DEREF -> Loads the cell contained in slot /i/ of the cell and free variable storage. 
                 Pushes a reference to the object the cell contains on the stack.
