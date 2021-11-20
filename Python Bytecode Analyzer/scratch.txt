@@ -1,0 +1,44 @@
+length: 37
+
+def sort_push_values(relations, statement_metadata):
+    """Function which sorts the push value set in the order it is disassmbled
+
+    Args:
+        relations (set[(_,_)]): List of all the sets; Push_Values,Pop_Values,...
+        statement_metadata (Identifier, <linenumber>.<offset>): Statement Metadata tuple
+    """
+    metadata_dict = dict(statement_metadata)
+
+    sorted_pushes = list()
+    
+    ordered_ids = list()
+    unordered_ids = list()
+
+    dict_statement_pushes = dict(relations['PushValue'])
+    dict_size = len(dict_statement_pushes)
+
+    #new_dict = dict(zip(relations['PushValue'],[None]*len(relations['PushValue'])))
+    #new_dict_size = len(new_dict)
+
+    for tmp_tuple in statement_metadata:
+        ordered_ids.append(tmp_tuple[0])
+
+    for tmp_tuple in relations['PushValue']:
+        unordered_ids.append(tmp_tuple[0])
+
+    '''BUG There are different sizes of sorted
+    and unsorted lists'''
+
+    size_sorted = len(ordered_ids)
+    size_notsorted = len(unordered_ids)
+
+    print(dict_size)
+
+    #for i in range(dict_size):
+    #   sorted_pushes[i] = (ordered_ids[i], dict_statement_pushes[ordered_ids[i]])
+
+    #return sorted_pushes
+
+
+
+{(<md5 _hashlib.HASH object @ 0x107556170>, 44.0)}

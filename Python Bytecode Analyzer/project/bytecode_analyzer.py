@@ -23,9 +23,6 @@ import sys
 import traceback
 import hashlib
 
-
-# import frame
-
 import types
 
 
@@ -421,14 +418,18 @@ def sort_push_values(relations, statement_metadata):
         if id_value in unordered_ids:
     
             sorted_statement_ids.append((id_value,dict_pushval[id_value]))
-        
-
-    print (len(ordered_ids))
-    print (len(unordered_ids))
-
-
 
     return sorted_statement_ids
+
+def save_to_csv(relation, facts_type):
+    
+    save_path = os.getcwd() + "/Python Bytecode Analyzer/resources/" + facts_type + ".facts"
+
+    f=open(save_path,'w')
+    #writer = csv.writer(f)
+
+    f.write('\n'.join('%s, %s' % tuple for tuple in relation))
+
 
 def line_number_table_generator(bytecode):
     """
@@ -463,20 +464,19 @@ def line_number_table_generator(bytecode):
 if __name__ == '__main__':
     arguments = docopt.docopt(__doc__)
     try:
-        # code object
-        # unbound code object
-
+    
         code_object = funcF.__code__
         out_obj = main(code_object)
-        #sort_instructions(out_obj)
+        
         sorted_metadata = sort_metadata(out_obj)
         #sorted_push_values = sort_push_values(out_obj,sorted_metadata)
         sorted_push = sort_push_values(out_obj, sorted_metadata)
-        # passing the function
-        # out_func = main(funcF)
-        # elems = set(sorted_metadata).difference(set(sorted_push))
 
+        save_to_csv(sorted_push, "PushValue")
+        save_to_csv(sorted_metadata, "StatementMetadata")
+        
         assert False
+
     except Exception:
         extype, value, tb = sys.exc_info()
         traceback.print_exc()
