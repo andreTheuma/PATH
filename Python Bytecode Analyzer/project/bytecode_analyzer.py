@@ -23,27 +23,15 @@ import sys
 import traceback
 import hashlib
 
+from sorting_handler import sorting_handler
+from file_handler import file_handler
+import functions.nested_func
+
 import types
 
-
-def incFunction(n):
-    return n + 1
-
-
-def funcF(x):
-    
-    def funcInc():
-        # declaration of a nonlocal variable
-        nonlocal x
-        # increment x -> BINARY_ADD TOS = TOS1 & TOS.
-        x += 1
-
-    class X:
-        def h(self):
-            return x
-
-    return X
-
+def init_function():
+    nested_func = functions.nested_func
+    return nested_func
 
 #  .decl PushValue(stmt:Statement, v:Value)
 #  .decl Statement_Opcode(statement: Statement, opcode: Opcode)
@@ -51,7 +39,6 @@ def funcF(x):
 #  .decl Statement_Pushes(statement: Statement, n: number)
 #  .decl Statement_Pops(statement: Statement, n: number)
 #  .decl Statement_Code(statement: Statement, )
-
 
 def generate_statement_identifier(b, i):
     """
@@ -325,7 +312,6 @@ def main(function):
 
     return fact_dict
 
-
 def init_sets():
     """
     Function which initializes all the sets
@@ -340,7 +326,6 @@ def init_sets():
     
     return push_value,statement_opcode,statement_next,statement_pushes,statement_pops,statement_code, statement_metadata
  
-
 def split_list(lst, size):
     """
     Function which splits a list
@@ -354,82 +339,6 @@ def split_list(lst, size):
     """
     for i in range(0, len(lst), size):
         yield lst[i:i + size]
-
-
-#def sort_instructions(relations):
-#    code_sorted = sorted(list({v for k, v in relations['Statement_Code']}))
-#    import pdb; pdb.set_trace()
-#    pass
-
-def take_second_key(item):
-    """
-    Retrieves the key of the item to be sorted by.
-
-    Args:
-        item (int): the int used to sort the values by
-    Returns:
-        int: value at the index of the item key
-    """
-    return item[1]
-
-def take_third_key(item): 
-    return item[2]
-
-def sort_metadata(relations):
-    """Function which sorts the metadata set in the order it is disassembled 
-    in dis.dis()
-
-    Args:
-        relations (set[(_,_)]) : List of all the sets; Push_Values,Pop_Values,...
-
-    Returns:
-        set(Identifier, <linenumber>.<offset>): Statement_metadata in order
-    """
-    sorted_statement_ids = sorted(relations['Statement_Metadata'], key=take_second_key)
-    return sorted_statement_ids
-
-def sort_push_values(relations, statement_metadata):
-    """Function which sorts the push value set in the order it is disassmbled
-
-    Args:
-        relations (set[(_,_)]): List of all the sets; Push_Values,Pop_Values,...
-        statement_metadata (Identifier, <linenumber>.<offset>): Statement Metadata tuple
-    """
-    sorted_statement_ids = list()
-
-    dict_metadata = dict(statement_metadata)
-    dict_pushval = dict(relations['PushValue'])
-
-    ordered_ids = list()
-    unordered_ids = list()
-
-    #storing the ordered IDs so as to sort the unordered IDs
-    for tuple in statement_metadata:
-        ordered_ids.append(tuple[0])
-
-    for tuple in relations['PushValue']:
-        unordered_ids.append(tuple[0])
-
-    for ordered_tuple in statement_metadata:
-        line_value = ordered_tuple[1]
-        id_value = ordered_tuple[0]
-
-        # if key exists obtain value
-        if id_value in unordered_ids:
-    
-            sorted_statement_ids.append((id_value,dict_pushval[id_value]))
-
-    return sorted_statement_ids
-
-def save_to_csv(relation, facts_type):
-    
-    save_path = os.getcwd() + "/Python Bytecode Analyzer/resources/" + facts_type + ".facts"
-
-    f=open(save_path,'w')
-    #writer = csv.writer(f)
-
-    f.write('\n'.join('%s, %s' % tuple for tuple in relation))
-
 
 def line_number_table_generator(bytecode):
     """
@@ -464,17 +373,31 @@ def line_number_table_generator(bytecode):
 if __name__ == '__main__':
     arguments = docopt.docopt(__doc__)
     try:
-    
-        code_object = funcF.__code__
+        
+        function = init_function()
+        code_object = function.nested_func.funcF.__code__
+
         out_obj = main(code_object)
         
-        sorted_metadata = sort_metadata(out_obj)
-        #sorted_push_values = sort_push_values(out_obj,sorted_metadata)
-        sorted_push = sort_push_values(out_obj, sorted_metadata)
+        '''TODO  
+        sorted_stmt_pushes
+        sorted_stmt_pops
+        sorted_stmt_opcode
+        sorted_stmt_code
+        '''
 
-        save_to_csv(sorted_push, "PushValue")
-        save_to_csv(sorted_metadata, "StatementMetadata")
-        
+        # init sorting handler
+        sorter = sorting_handler()
+
+        sorted_stmt_metadata = sorter.sort_metadata(out_obj)
+        sorted_push = sorter.sort_push_values(out_obj, sorted_stmt_metadata)
+
+        # init file handler
+        file = file_handler()
+
+        file.save_to_csv(sorted_push, "PushValue")
+        file.save_to_csv(sorted_stmt_metadata, "StatementMetadata")
+
         assert False
 
     except Exception:
