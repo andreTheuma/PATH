@@ -25,12 +25,12 @@ import hashlib
 
 from sorting_handler import sorting_handler
 from file_handler import file_handler
-import functions.nested_func
+import functions.nested_func_example
 
 import types
 
 def init_function():
-    nested_func = functions.nested_func
+    nested_func = functions.nested_func_example
     return nested_func
 
 #  .decl PushValue(stmt:Statement, v:Value)
@@ -139,8 +139,6 @@ def main(function):
     """
     global inner_code_object_address_index
 
-    #dict_sets = init_sets()
-
     push_value = set()
     statement_opcode = set()
     statement_next = set()
@@ -232,25 +230,6 @@ def main(function):
             if instruction.opname == 'MAKE_FUNCTION':
                 push_value.add((properties))
                 statement_pushes.add((identifier, 1 ))
-
-                '''''
-                inner_code_object_address = prev_instruction.argval
-    
-                k = 0
-                for p in function.co_consts:
-                    if p == inner_code_object_address:
-                        inner_code_object_address_index = k - 1
-                        break
-                    k += 1
-    
-                inner_code_object = function.co_consts[inner_code_object_address_index]
-    
-                inner_fact_dict = main(inner_code_object)
-    
-                for k, v in inner_fact_dict.items():
-                    d = fact_dict[k]
-                    d |= v
-                '''''
 
                 inner_code_object = list(bytecode)[i-2].argval
                 inner_fact_dict = main(inner_code_object)
@@ -379,24 +358,34 @@ if __name__ == '__main__':
 
         out_obj = main(code_object)
         
-        '''TODO  
-        sorted_stmt_pushes
+        '''TODO 
         sorted_stmt_pops
         sorted_stmt_opcode
         sorted_stmt_code
+        '''
+
+        '''BUG remove sorted_stmt_metadata dependency
         '''
 
         # init sorting handler
         sorter = sorting_handler()
 
         sorted_stmt_metadata = sorter.sort_metadata(out_obj)
-        sorted_push = sorter.sort_push_values(out_obj, sorted_stmt_metadata)
+        sorted_stmt_pushes = sorter.sort_stmt_pushes(out_obj)
+        sorted_push = sorter.sort_push_values(out_obj)
+        sorted_stmt_pops = sorter.sort_stmt_pops(out_obj)
+        sorted_stmt_opcode = sorter.sort_stmt_opcodes(out_obj)
+        sorted_stmt_code = sorter.sort_stmt_code(out_obj)
 
-        # init file handler
+        # init file handl0er
         file = file_handler()
 
         file.save_to_csv(sorted_push, "PushValue")
         file.save_to_csv(sorted_stmt_metadata, "StatementMetadata")
+        file.save_to_csv(sorted_stmt_pushes, "StatementPushes")
+        file.save_to_csv(sorted_stmt_pops, "StatementPops")
+        file.save_to_csv(sorted_stmt_opcode, "StatementOpcode")
+        file.save_to_csv(sorted_stmt_code, "StatementCode")
 
         assert False
 
