@@ -1,0 +1,2 @@
+.decl return_count(stmt: Statement) :-
+    

@@ -42,3 +42,23 @@ def sort_push_values(relations, statement_metadata):
 
 
 {(<md5 _hashlib.HASH object @ 0x107556170>, 44.0)}
+
+
+'''''
+                inner_code_object_address = prev_instruction.argval
+    
+                k = 0
+                for p in function.co_consts:
+                    if p == inner_code_object_address:
+                        inner_code_object_address_index = k - 1
+                        break
+                    k += 1
+    
+                inner_code_object = function.co_consts[inner_code_object_address_index]
+    
+                inner_fact_dict = main(inner_code_object)
+    
+                for k, v in inner_fact_dict.items():
+                    d = fact_dict[k]
+                    d |= v
+                '''''
