@@ -175,6 +175,7 @@ def main(function):
 
             """
             line_arg is in the format -> <line_number>.<bytecode_offset>
+            BUG fix the bytecode offset implementation
             """
             line_arg = line_number + bytecode_offset/100
 
@@ -358,15 +359,6 @@ if __name__ == '__main__':
 
         out_obj = main(code_object)
         
-        '''TODO 
-        sorted_stmt_pops
-        sorted_stmt_opcode
-        sorted_stmt_code
-        '''
-
-        '''BUG remove sorted_stmt_metadata dependency
-        '''
-
         # init sorting handler
         sorter = sorting_handler()
 
@@ -395,8 +387,6 @@ if __name__ == '__main__':
         pdb.post_mortem(tb)
 
 '''
-TODO ADD STORE_NAME
-
 BYTECODE TERMS
 
 TOS = top of stack
