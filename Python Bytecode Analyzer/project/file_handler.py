@@ -9,4 +9,4 @@ class file_handler:
         f=open(save_path,'w')
         #writer = csv.writer(f)
 
-        f.write('\n'.join('%s, %s' % tuple for tuple in relation))
+        f.write('\n'.join('%s\t%s' % tuple for tuple in relation))
