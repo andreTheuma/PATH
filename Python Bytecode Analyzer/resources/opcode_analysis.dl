@@ -1,0 +1,145 @@
+//---------------------------------------------------------------------------------------//
+// setting up types //
+.type Statement <: symbol
+.type Opcode <: symbol
+//---------------------------------------------------------------------------------------//
+// used to return the identifier //
+.decl identifier_address(address: Statement)
+identifier_address(address) :- identifier_address(address).
+
+.decl opcode_value(instruction: Opcode)
+opcode_value(instruction) :- opcode_value(instruction).
+//---------------------------------------------------------------------------------------//
+// setting up opcodes //
+.decl OpcodeIs_LOAD_CLOSURE(instruction: Opcode)
+OpcodeIs_LOAD_CLOSURE(instruction) :- OpcodeIs_LOAD_CLOSURE(instruction).
+
+.decl OpcodeIs_BUILD_TUPLE(instruction: Opcode)
+OpcodeIs_BUILD_TUPLE(instruction) :- OpcodeIs_BUILD_TUPLE(instruction).
+
+.decl OpcodeIs_LOAD_FAST(instruction: Opcode)
+OpcodeIs_LOAD_FAST(instruction) :- OpcodeIs_LOAD_FAST(instruction).
+
+.decl OpcodeIs_LOAD_CONST(instruction: Opcode)
+OpcodeIs_LOAD_CONST(instruction) :- OpcodeIs_LOAD_CONST(instruction).
+
+.decl OpcodeIs_BINARY_ADD(instruction: Opcode)
+OpcodeIs_BINARY_ADD(instruction) :- OpcodeIs_BINARY_ADD(instruction).
+
+.decl OpcodeIs_RETURN_VALUE(instruction: Opcode)
+OpcodeIs_RETURN_VALUE(instruction) :- OpcodeIs_RETURN_VALUE(instruction).
+
+.decl OpcodeIs_STORE_FAST(instruction: Opcode)
+OpcodeIs_STORE_FAST(instruction) :- OpcodeIs_STORE_FAST(instruction).
+
+.decl OpcodeIs_MAKE_FUNCTION(instruction: Opcode)
+OpcodeIs_MAKE_FUNCTION(instruction) :- OpcodeIs_MAKE_FUNCTION(instruction).
+
+.decl OpcodeIs_LOAD_DEREF(instruction: Opcode)
+OpcodeIs_LOAD_DEREF(instruction) :- OpcodeIs_LOAD_DEREF(instruction).
+
+.decl OpcodeIs_INPLACE_ADD(instruction: Opcode)
+OpcodeIs_INPLACE_ADD(instruction) :- OpcodeIs_INPLACE_ADD(instruction).
+//---------------------------------------------------------------------------------------//
+// pushing values to decls //
+OpcodeIs_LOAD_CLOSURE("LOAD_CLOSURE").
+
+OpcodeIs_BUILD_TUPLE("BUILD_TUPLE").
+
+OpcodeIs_LOAD_FAST("LOAD_FAST").
+
+OpcodeIs_LOAD_CONST("LOAD_CONST").
+
+OpcodeIs_BINARY_ADD("BINARY_ADD").
+
+OpcodeIs_RETURN_VALUE("RETURN_VALUE").
+
+OpcodeIs_STORE_FAST("STORE_FAST").
+
+OpcodeIs_MAKE_FUNCTION("MAKE_FUNCTION").
+
+OpcodeIs_LOAD_DEREF("LOAD_DEREF").
+
+OpcodeIs_INPLACE_ADD("INPLACE_ADD").
+//---------------------------------------------------------------------------------------//
+// reading the file //
+.decl Statement_Opcode(address: Statement, opcode: Opcode)
+.input Statement_Opcode(IO = "file", filename = "Python Bytecode Analyzer/resources/StatementOpcode.facts", delimeter="\t")
+//---------------------------------------------------------------------------------------//
+// analysis functions //
+.decl counter_load_closure(address: Statement, opcode: Opcode)
+counter_load_closure(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_LOAD_CLOSURE(opcode).
+
+.decl counter_build_tuple(address: Statement, opcode: Opcode)
+counter_build_tuple(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_BUILD_TUPLE(opcode).
+
+.decl counter_load_fast(address: Statement, opcode: Opcode)
+counter_load_fast(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_LOAD_FAST(opcode).
+
+.decl counter_load_const(address: Statement, opcode: Opcode)
+counter_load_const(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_LOAD_CONST(opcode).
+
+.decl counter_binary_add(address: Statement, opcode: Opcode)
+counter_binary_add(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_BINARY_ADD(opcode).
+
+.decl counter_return_value(address: Statement, opcode: Opcode)
+counter_return_value(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_RETURN_VALUE(opcode).
+
+.decl counter_store_fast(address: Statement, opcode: Opcode)
+counter_store_fast(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_STORE_FAST(opcode).
+
+.decl counter_make_function(address: Statement, opcode: Opcode)
+counter_make_function(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_MAKE_FUNCTION(opcode).
+
+.decl counter_load_deref(address: Statement, opcode: Opcode)
+counter_load_deref(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_LOAD_DEREF(opcode).
+
+.decl counter_inplace_add(address: Statement, opcode: Opcode)
+counter_inplace_add(address, opcode) :- 
+            Statement_Opcode(address, opcode),
+            OpcodeIs_INPLACE_ADD(opcode).
+
+.decl counter(x:number)
+counter(c) :- c = count:{Statement_Opcode(_,_)}.
+
+//---------------------------------------------------------------------------------------//
+// outputs to files //                           
+.output counter_load_closure(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_CLOSURE.csv", delimeter="\t")
+
+.output counter_build_tuple(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_BUILD_TUPLE.csv", delimeter="\t")
+
+.output counter_load_fast(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_FAST.csv", delimeter="\t")
+
+.output counter_load_const(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_CONST.csv", delimeter="\t")
+
+.output counter_binary_add(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_BINARY_ADD.csv", delimeter="\t")
+
+.output counter_return_value(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_RETURN_VALUE.csv", delimeter="\t")
+
+.output counter_store_fast(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_FAST.csv", delimeter="\t")
+
+.output counter_make_function(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_MAKE_FUNCTION.csv", delimeter="\t")
+
+.output counter_load_deref(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_DEREF.csv", delimeter="\t")
+
+.output counter_inplace_add(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_INPLACE_ADD.csv", delimeter="\t")
+
+.output counter(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_OPCODE_COUNTER.csv")
