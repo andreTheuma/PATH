@@ -55,7 +55,6 @@ OpcodeIs_LOAD_BUILD_CLASS(instruction) :- OpcodeIs_LOAD_BUILD_CLASS(instruction)
 
 .decl OpcodeIs_LOAD_NAME(instruction: Opcode)
 OpcodeIs_LOAD_NAME(instruction) :- OpcodeIs_LOAD_NAME(instruction).
-// TODO : Add LOAD_NAME
 
 //---------------------------------------------------------------------------------------//
 // pushing values to decls //
@@ -89,7 +88,15 @@ OpcodeIs_LOAD_NAME("LOAD_NAME").
 //---------------------------------------------------------------------------------------//
 // reading the file //
 .decl Statement_Opcode(address: Statement, opcode: Opcode)
-.input Statement_Opcode(IO = "file", filename = "Python Bytecode Analyzer/resources/StatementOpcode.facts", delimeter="\t")
+.input Statement_Opcode(IO = "file", filename = "StatementOpcode.facts", delimeter="\t")
+
+
+
+.decl Data(address:Statement)
+Data(address) :- 
+    identifier_address(address).
+.input Data(IO = "file", filename = "StatementOpcode.facts", delimeter="\t")
+
 //---------------------------------------------------------------------------------------//
 // analysis functions //
 .decl counter_load_closure(address: Statement, opcode: Opcode)
@@ -117,10 +124,29 @@ counter_binary_add(address, opcode) :-
             Statement_Opcode(address, opcode),
             OpcodeIs_BINARY_ADD(opcode).
 
-.decl counter_return_value(address: Statement, opcode: Opcode)
-counter_return_value(address, opcode) :- 
-            Statement_Opcode(address, opcode),
+.decl counter_return_value(address:Statement, opcode:Opcode)
+counter_return_value(address, opcode) :-
+            Statement_Opcode(address,opcode),
             OpcodeIs_RETURN_VALUE(opcode).
+
+
+
+.decl address_example(address:Statement)
+address_example(address) :- address_example(address).
+address_example("<md5 _hashlib.HASH object @ 0x1040b2050>").
+
+// removes the opcode component for the address
+.decl empty_string_for_opcode(string:Opcode)
+empty_string_for_opcode(string) :- empty_string_for_opcode(string).
+empty_string_for_opcode("").
+
+.decl get_address_from_return_opcode(address:Statement,opcode:Opcode)
+get_address_from_return_opcode(address,opcode):-
+            //OpcodeIs_RETURN_VALUE(opcode),
+            counter_return_value(address, _),
+            empty_string_for_opcode(opcode).
+
+
 
 .decl counter_store_fast(address: Statement, opcode: Opcode)
 counter_store_fast(address, opcode) :- 
@@ -172,35 +198,37 @@ counter_load_name(address, opcode) :-
 
 //---------------------------------------------------------------------------------------//
 // outputs to files //                           
-.output counter_load_closure(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_CLOSURE.csv", delimeter="\t")
+.output counter_load_closure(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_CLOSURE.csv", delimeter="\t")
 
-.output counter_build_tuple(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_BUILD_TUPLE.csv", delimeter="\t")
+.output counter_build_tuple(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_BUILD_TUPLE.csv", delimeter="\t")
 
-.output counter_load_fast(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_FAST.csv", delimeter="\t")
+.output counter_load_fast(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_FAST.csv", delimeter="\t")
 
-.output counter_load_const(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_CONST.csv", delimeter="\t")
+.output counter_load_const(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_CONST.csv", delimeter="\t")
 
-.output counter_binary_add(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_BINARY_ADD.csv", delimeter="\t")
+.output counter_binary_add(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_BINARY_ADD.csv", delimeter="\t")
 
-.output counter_return_value(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_RETURN_VALUE.csv", delimeter="\t")
+.output counter_return_value(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_RETURN_VALUE.csv", delimeter="\t")
 
-.output counter_store_fast(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_FAST.csv", delimeter="\t")
+.output counter_store_fast(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_FAST.csv", delimeter="\t")
 
-.output counter_make_function(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_MAKE_FUNCTION.csv", delimeter="\t")
+.output counter_make_function(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_MAKE_FUNCTION.csv", delimeter="\t")
 
-.output counter_load_deref(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_DEREF.csv", delimeter="\t")
+.output counter_load_deref(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_DEREF.csv", delimeter="\t")
 
-.output counter_inplace_add(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_INPLACE_ADD.csv", delimeter="\t")
+.output counter_inplace_add(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_INPLACE_ADD.csv", delimeter="\t")
 
-.output counter_store_deref(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_DEREF.csv", delimeter="\t")
+.output counter_store_deref(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_DEREF.csv", delimeter="\t")
 
-.output counter_call_function(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_CALL_FUNCTION.csv", delimeter="\t")
+.output counter_call_function(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_CALL_FUNCTION.csv", delimeter="\t")
 
-.output counter_store_name(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_NAME.csv", delimeter="\t")
+.output counter_store_name(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_NAME.csv", delimeter="\t")
 
-.output counter_load_build_class(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_BUILD_CLASS.csv", delimeter="\t")
+.output counter_load_build_class(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_BUILD_CLASS.csv", delimeter="\t")
 
-.output counter_load_name(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_NAME.csv", delimeter="\t")
+.output counter_load_name(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_NAME.csv", delimeter="\t")
+
+.output get_address_from_return_opcode(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/OPCODE_RETURN_ADDRESSES.csv", delimeter="\t")
 
 //.output counter_(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_DEREF.csv", delimeter="\t")
 

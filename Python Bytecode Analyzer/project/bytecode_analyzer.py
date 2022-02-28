@@ -26,11 +26,13 @@ import hashlib
 from sorting_handler import sorting_handler
 from file_handler import file_handler
 import functions.nested_func_example
+import functions.primeNumberIntervals
 
 import types
 
 def init_function():
     nested_func = functions.nested_func_example
+    prime_inter_func = functions.primeNumberIntervals
     return nested_func
 
 #  .decl PushValue(stmt:Statement, v:Value)
@@ -76,58 +78,64 @@ def generate_statement_identifier_md5(b, i):
 
     return md5_hash
 
-def get_pushes(i):
+def get_pushes(i,push_val):
     """
     Function which returns the amount of pushes to the stack
     a bytecode call makes.
 
     Args:
-        i (Instruction): is the bytecode instruction
+        i (Instruction): is the bytecode instruction.
+        push_val (int): are the amount of args pushed on the stack by the instruction
 
     Returns:
         dict[string, int]: Returns the Opname and its corresponding pushes to the stack
 
     """
-    d = {'LOAD_FAST': 1,
-         'BINARY_ADD': 1,
-         'LOAD_CONST': 1,
-         'STORE_FAST': 1,
-         'MAKE_FUNCTION': 1,
-         'BUILD_TUPLE': 1,
-         'LOAD_DEREF': 1,
-         'INPLACE_ADD': 1,
-         'STORE_DEREF': 1,
+    d = {'LOAD_FAST': 1,     #: 1
+         'BINARY_ADD': push_val,
+         'LOAD_CONST': 1,    #: 1
+         'STORE_FAST': push_val,
+         
+         'MAKE_FUNCTION': push_val,
+         'BUILD_TUPLE': push_val,
+         'LOAD_DEREF': push_val,
+         'INPLACE_ADD': push_val,
+         'STORE_DEREF': push_val,
          'LOAD_CLOSURE': 1,
-         'STORE_NAME': 1,
-         'LOAD_BUILD_CLASS': 1
+         'STORE_NAME': 0,
+         'LOAD_BUILD_CLASS': push_val
          }
     if i.opname in d:
         return d[i.opname]
     return 0
 
-def get_pops(i):
+def get_pops(i,pop_val):
     """
     Function which returns the amount of pops from the stack
     a bytecode call makes.
 
     Args:
         i (Instruction): is the bytecode instruction
+        pop_val (int): are the amount of args popped on the stack by the instruction
 
     Returns:
         dict[string, int]: Returns the Opname and its corresponding pops from the stack
 
     """
-    d = {'RETURN_VALUE': 1,
-         'BINARY_ADD': 2,
-         'BUILD_TUPLE': 2,
-         'INPLACE_ADD': 2,
-         'CALL_FUNCTION': 1
+    d = {'RETURN_VALUE': pop_val,
+         'BINARY_ADD': pop_val,
+         'BUILD_TUPLE': pop_val,
+         'INPLACE_ADD': pop_val,
+         'CALL_FUNCTION': pop_val
          }
     if i.opname in d:
         return d[i.opname]
     return 0
 
 def main(function):
+
+    ## TODO: FIX STATEMENT PUSHES AND POPS + IMPLEMENT STACK
+
     """
     Function which creates facts about a Python function for analysis. main makes use of recursive dissasembly
 
@@ -166,9 +174,16 @@ def main(function):
     for i, instruction in enumerate(bytecode):
 
         try:
+            
+            stack = inspect.stack()
 
+            #frame = inspect.currentframe()
+
+            arg_count = instruction.arg
             identifier = generate_statement_identifier_md5(bytecode, i)
-            #identifier = generate_statement_identifier(bytecode, i)
+
+            stack_size = bytecode.codeobj.co_stacksize
+            live_locals = bytecode.codeobj.co_nlocals
 
             line_number = line_number_table[0][1]
             bytecode_offset = instruction.offset #line_number_table[l_count][0]
@@ -176,6 +191,8 @@ def main(function):
             """
             line_arg is in the format -> <line_number>.<bytecode_offset>
             BUG fix the bytecode offset implementation
+            TODO add the amount of pushes & pops to stack
+            TODO implement more opcodes
             """
             line_arg = line_number + bytecode_offset/100
 
@@ -183,8 +200,8 @@ def main(function):
             #properties = identifier,line_arg
 
             statement_opcode.add((identifier, instruction.opname ))
-            statement_pushes.add((identifier, get_pushes(instruction) ))
-            statement_pops.add((identifier, get_pops(instruction) ))
+            statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+            statement_pops.add((identifier, get_pops(instruction,arg_count) ))
             statement_code.add((identifier, str(function) ))
             statement_metadata.add((identifier,line_arg))
 
@@ -193,44 +210,44 @@ def main(function):
 
             if instruction.opname == 'LOAD_CONST':
                 push_value.add((properties))
-                statement_pushes.add((identifier, 1 ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'LOAD_FAST':
                 push_value.add((properties))
-                statement_pushes.add((identifier, 1 ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'BINARY_ADD':
                 push_value.add((properties))
-                statement_pops.add((identifier, 2 ))
-                statement_pushes.add((identifier, 1 ))
+                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'RETURN_VALUE':
                 push_value.add((properties))
-                statement_pops.add((identifier, 1 ))
+                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'STORE_FAST':
                 push_value.add((properties))
-                statement_pushes.add((identifier, 1 ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'LOAD_CLOSURE':
                 push_value.add((properties))
-                statement_pushes.add((identifier, 1 ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'MAKE_FUNCTION':
                 push_value.add((properties))
-                statement_pushes.add((identifier, 1 ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 inner_code_object = list(bytecode)[i-2].argval
                 inner_fact_dict = main(inner_code_object)
@@ -242,33 +259,33 @@ def main(function):
 
             if instruction.opname == 'BUILD_TUPLE':
                 push_value.add((properties))
-                statement_pops.add((identifier, 2 ))
-                statement_pushes.add((identifier, 1 ))
+                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'LOAD_DEREF':
                 push_value.add((properties))
-                statement_pushes.add((identifier, 1 ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'INPLACE_ADD':
                 push_value.add((properties))
-                statement_pops.add((identifier, 2 ))
-                statement_pushes.add((identifier, 1 ))
+                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'STORE_DEREF':
                 push_value.add((properties))
-                statement_pushes.add((identifier, 1 ))
+                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
 
                 continue
 
             if instruction.opname == 'CALL_FUNCTION':
                 push_value.add((properties))
-                statement_pops.add((identifier, 1 ))
+                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
 
                 continue
 
@@ -355,6 +372,9 @@ if __name__ == '__main__':
     try:
         
         function = init_function()
+        
+        dis.dis(function)
+        
         code_object = function.nested_func.funcF.__code__
 
         out_obj = main(code_object)
@@ -369,7 +389,7 @@ if __name__ == '__main__':
         sorted_stmt_opcode = sorter.sort_stmt_opcodes(out_obj)
         sorted_stmt_code = sorter.sort_stmt_code(out_obj)
 
-        # init file handl0er
+        # init file handler
         file = file_handler()
 
         file.save_to_csv(sorted_push, "PushValue")
@@ -423,4 +443,10 @@ LOAD_DEREF -> Loads the cell contained in slot /i/ of the cell and free variable
 INPLACE_ADD -> Implements in-place TOS = TOS1 + TOS (increment).
 STORE_DEREF -> Stores TOS into the cell contained in slot /i/
                 of the cell and free variable storage. (assignment)
+
+http://unpyc.sourceforge.net/Opcodes.html
+https://www.synopsys.com/blogs/software-security/understanding-python-bytecode/
+https://ntnuopen.ntnu.no/ntnu-xmlui/bitstream/handle/11250/2515371/SimenBragen.pdf?sequence=1
+
+
 '''
