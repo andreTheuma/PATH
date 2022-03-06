@@ -13,6 +13,7 @@ Options:
 """
 import code
 from ctypes import sizeof
+import opcode
 import os, sys
 import docopt
 import json
@@ -25,15 +26,17 @@ import hashlib
 
 from sorting_handler import sorting_handler
 from file_handler import file_handler
-import functions.nested_func_example
-import functions.primeNumberIntervals
+#import functions.nested_func_example
+#import functions.primeNumberIntervals
+import functions.addition
 
 import types
 
 def init_function():
-    nested_func = functions.nested_func_example
-    prime_inter_func = functions.primeNumberIntervals
-    return nested_func
+    #nested_func = functions.nested_func_example
+    #prime_inter_func = functions.primeNumberIntervals
+    add_func = functions.addition
+    return add_func
 
 #  .decl PushValue(stmt:Statement, v:Value)
 #  .decl Statement_Opcode(statement: Statement, opcode: Opcode)
@@ -75,69 +78,146 @@ def generate_statement_identifier_md5(b, i):
     
     bytecode_index_string = bytecode_string+index_string
     md5_hash = hashlib.md5(bytecode_index_string.encode())
+    hash_loc = md5_hash.hexdigest()
 
-    return md5_hash
+    return hash_loc
 
-def get_pushes(i,push_val):
+def get_pushes(i,instruction_arg):
     """
     Function which returns the amount of pushes to the stack
-    a bytecode call makes.
+    a bytecode call makes. These are predefined values, taken from ceval.c
 
     Args:
         i (Instruction): is the bytecode instruction.
-        push_val (int): are the amount of args pushed on the stack by the instruction
 
     Returns:
         dict[string, int]: Returns the Opname and its corresponding pushes to the stack
 
     """
-    d = {'LOAD_FAST': 1,     #: 1
-         'BINARY_ADD': push_val,
-         'LOAD_CONST': 1,    #: 1
-         'STORE_FAST': push_val,
+    d = {'LOAD_FAST': 1,
+         'BINARY_ADD': 0,
+         'LOAD_CONST': 1,
+         'STORE_FAST': 0,
          
-         'MAKE_FUNCTION': push_val,
-         'BUILD_TUPLE': push_val,
-         'LOAD_DEREF': push_val,
-         'INPLACE_ADD': push_val,
-         'STORE_DEREF': push_val,
+         'MAKE_FUNCTION': 1,
+         'BUILD_TUPLE': 1,
+         'LOAD_DEREF': 1,
+         'INPLACE_ADD': 0, #TODO: CHECK
+         'STORE_DEREF': 0,
          'LOAD_CLOSURE': 1,
          'STORE_NAME': 0,
-         'LOAD_BUILD_CLASS': push_val
+         'LOAD_BUILD_CLASS': 1,
+
+         'RETURN_VALUE' : 0,
+         'CALL_FUNCTION' : 1
          }
+
     if i.opname in d:
         return d[i.opname]
+
+        #TODO: FIX INPLACE_ADD
     return 0
 
-def get_pops(i,pop_val):
+def get_pops(i,instruction_arg):
     """
     Function which returns the amount of pops from the stack
     a bytecode call makes.
 
     Args:
         i (Instruction): is the bytecode instruction
-        pop_val (int): are the amount of args popped on the stack by the instruction
+        instruction_arg (int): are the arguments of the instruction
 
     Returns:
         dict[string, int]: Returns the Opname and its corresponding pops from the stack
 
     """
-    d = {'RETURN_VALUE': pop_val,
-         'BINARY_ADD': pop_val,
-         'BUILD_TUPLE': pop_val,
-         'INPLACE_ADD': pop_val,
-         'CALL_FUNCTION': pop_val
+    d = {
+        'LOAD_FAST': 0,
+         'BINARY_ADD': 0, #TODO: CHECK
+         'LOAD_CONST': 0,
+         'STORE_FAST': 1,
+         
+         'MAKE_FUNCTION': 1,
+         'BUILD_TUPLE': instruction_arg,
+         'LOAD_DEREF': 0,
+         'INPLACE_ADD': 0, #TODO: CHECK
+         'STORE_DEREF': 1,
+         'LOAD_CLOSURE': 0,
+         'STORE_NAME': 1,
+         'LOAD_BUILD_CLASS': 0,
+
+        'RETURN_VALUE': 1,
+        'CALL_FUNCTION': instruction_arg
          }
     if i.opname in d:
         return d[i.opname]
+    
+    #TODO: FIX INPLACE_ADD & BINARY_ADD
+    
     return 0
+
+def stack_handler(stack, instruction, identifier, instruction_arg):
+    
+    opcode_name = instruction.opname
+
+    pushes = get_pushes(instruction,instruction_arg)
+    pops = get_pops(instruction,instruction_arg)
+
+    if opcode_name == "LOAD_CONST":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "LOAD_FAST":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+
+    if opcode_name == "BINARY_ADD":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "STORE_FAST":
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "RETURN_VALUE":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+
+    #TODO: ADD OTHER OPCODES
 
 def main(function):
 
-    ## TODO: FIX STATEMENT PUSHES AND POPS + IMPLEMENT STACK
-
     """
-    Function which creates facts about a Python function for analysis. main makes use of recursive dissasembly
+    Function which creates facts about a Python function for analysis. main makes use of recursive disassembly
 
     Args:
         function (code object): This is the function code object which is passed through
@@ -146,6 +226,9 @@ def main(function):
         dict(set,set,set,set,set,set,set): A dictionary of sets corresponding to fact_dict
     """
     global inner_code_object_address_index
+    
+    frame_stack = []
+    current_block = 0 
 
     push_value = set()
     statement_opcode = set()
@@ -154,54 +237,63 @@ def main(function):
     statement_pops = set()
     statement_code = set()
     statement_metadata = set()
+    statement_block = set()
 
     fact_dict = dict(
-        
         PushValue=push_value,                   # set(Statement_ID: int, Value_Pushed_To_Stack: TOS)
         Statement_Pushes=statement_pushes,      # set(Statement_ID: int, Stack_Pushes:int)
         Statement_Pops=statement_pops,          # set(Statement_ID: int, Stack_Pops:int)
         Statement_Opcode=statement_opcode,      # set(Statement_ID: int, Statement_Opcode: Opcode)
         Statement_Code=statement_code,          # set(Statement_ID: int, Statement_CodeObject: code_object)
         Statement_Next=statement_next,          # set()
-        Statement_Metadata=statement_metadata   # set(Statement_ID: int, Source_code_line_number: int, Bytecode_offset: int Original_Index: int )
+        Statement_Metadata=statement_metadata,   # set(Statement_ID: int, Source_code_line_number: int, Bytecode_offset: int Original_Index: int )
+        Statement_Block=statement_block
     )
 
     bytecode = dis.Bytecode(function)
-    prev_instruction = None
+    #find the total amount of bytecode instructions
 
+    instructions_list = list(dis.get_instructions(function))
+    instruction_size = len(instructions_list)
+
+    largest_bytecode_offset = instructions_list[instruction_size-1].offset 
+    
+    prev_instruction = None
+    line_number = 0
     line_number_table = line_number_table_generator(bytecode)
 
     for i, instruction in enumerate(bytecode):
 
         try:
             
-            stack = inspect.stack()
+            #stack = inspect.stack()
 
             #frame = inspect.currentframe()
 
-            arg_count = instruction.arg
+            instruction_arg = instruction.arg
             identifier = generate_statement_identifier_md5(bytecode, i)
 
-            stack_size = bytecode.codeobj.co_stacksize
-            live_locals = bytecode.codeobj.co_nlocals
+            #stack_size = bytecode.codeobj.co_stacksize
+            #live_locals = bytecode.codeobj.co_nlocals
 
-            line_number = line_number_table[0][1]
+            if(instruction.starts_line!=None):
+                line_number = instruction.starts_line
+            #line_number = line_number_table[0][1]
             bytecode_offset = instruction.offset #line_number_table[l_count][0]
 
             """
             line_arg is in the format -> <line_number>.<bytecode_offset>
-            BUG fix the bytecode offset implementation
-            TODO add the amount of pushes & pops to stack
-            TODO implement more opcodes
+            TODO: add the amount of pushes & pops to stack
+            TODO: implement more opcodes
+            TODO: add statement_block
             """
-            line_arg = line_number + bytecode_offset/100
+            line_arg = line_number + (bytecode_offset/largest_bytecode_offset)
 
-            properties = identifier, instruction.argval #, line_arg
-            #properties = identifier,line_arg
+            #add to current frame stack
 
-            statement_opcode.add((identifier, instruction.opname ))
-            statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
-            statement_pops.add((identifier, get_pops(instruction,arg_count) ))
+            statement_opcode.add((identifier, instruction.opname))
+            statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+            statement_pops.add((identifier, get_pops(instruction,instruction_arg)))
             statement_code.add((identifier, str(function) ))
             statement_metadata.add((identifier,line_arg))
 
@@ -209,45 +301,72 @@ def main(function):
                 statement_next.add((identifier, generate_statement_identifier(prev_instruction, i - 1)))
 
             if instruction.opname == 'LOAD_CONST':
-                push_value.add((properties))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                
+                frame_stack = stack_handler(frame_stack,instruction,identifier,instruction_arg)
 
                 continue
 
             if instruction.opname == 'LOAD_FAST':
-                push_value.add((properties))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier,instruction_arg)
+                
 
                 continue
 
             if instruction.opname == 'BINARY_ADD':
-                push_value.add((properties))
-                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'RETURN_VALUE':
-                push_value.add((properties))
-                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'STORE_FAST':
-                push_value.add((properties))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'LOAD_CLOSURE':
-                push_value.add((properties))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'MAKE_FUNCTION':
-                push_value.add((properties))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                #TODO: ADD FRAME_STACK FUNCTIONALITY
+
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
 
                 inner_code_object = list(bytecode)[i-2].argval
                 inner_fact_dict = main(inner_code_object)
@@ -258,50 +377,80 @@ def main(function):
                 continue
 
             if instruction.opname == 'BUILD_TUPLE':
-                push_value.add((properties))
-                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'LOAD_DEREF':
-                push_value.add((properties))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'INPLACE_ADD':
-                push_value.add((properties))
-                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'STORE_DEREF':
-                push_value.add((properties))
-                #statement_pushes.add((identifier, get_pushes(instruction,arg_count) ))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'CALL_FUNCTION':
-                push_value.add((properties))
-                statement_pops.add((identifier, get_pops(instruction,arg_count) ))
+                
+                #TODO: LOOK INTO CALL_FUNCTION
+                push_value.add((identifier, instruction.argval))
 
                 continue
 
             if instruction.opname == 'STORE_NAME':
-                push_value.add((properties))
-                #statement_pushes((identifier, 1))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+
                 continue
 
             if instruction.opname == 'LOAD_BUILD_CLASS':
-                push_value.add((properties))
-                #statement_pushes((identifier, 1))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+
                 continue
             
             if instruction.opname == 'LOAD_NAME':
-                push_value.add((properties))
-                #statement_pushes((identifier, 1))
+                
+                push_value.add((identifier, instruction.argval))
+                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+
                 continue
 
         finally:
@@ -339,7 +488,7 @@ def split_list(lst, size):
 
 def line_number_table_generator(bytecode):
     """
-    Function which handles the generation of the line number table
+    Function which handles the generation of the line number table. 
 
     Args:
         bytecode (code object): is the code object of the bytecode
@@ -375,7 +524,7 @@ if __name__ == '__main__':
         
         dis.dis(function)
         
-        code_object = function.nested_func.funcF.__code__
+        code_object = function.addition_numbers.__code__
 
         out_obj = main(code_object)
         
