@@ -144,7 +144,7 @@ class sorting_handler:
         statement_metadata = self.sort_metadata(relations)
 
         dict_metadata = dict(statement_metadata)
-        dict_pops = dict(relations['Statement_Opcode'])
+        dict_opcodes = dict(relations['Statement_Opcode'])
 
         ordered_ids = list()
         unordered_ids = list()
@@ -163,7 +163,7 @@ class sorting_handler:
             # if key exists obtain value
             if id_value in unordered_ids:
         
-                sorted_statement_ids.append((id_value,dict_pops[id_value]))
+                sorted_statement_ids.append((id_value,dict_opcodes[id_value]))
 
         return sorted_statement_ids
 
@@ -179,7 +179,7 @@ class sorting_handler:
         statement_metadata = self.sort_metadata(relations)
 
         dict_metadata = dict(statement_metadata)
-        dict_pops = dict(relations['Statement_Code'])
+        dict_code = dict(relations['Statement_Code'])
 
         ordered_ids = list()
         unordered_ids = list()
@@ -198,6 +198,35 @@ class sorting_handler:
             # if key exists obtain value
             if id_value in unordered_ids:
         
-                sorted_statement_ids.append((id_value,dict_pops[id_value]))
+                sorted_statement_ids.append((id_value,dict_code[id_value]))
+
+        return sorted_statement_ids
+
+    def sort_stmt_block(self, relations):
+        
+        sorted_statement_ids = list()
+        statement_metadata = self.sort_metadata(relations)
+
+        dict_metadata = dict(statement_metadata)
+        dict_blocks = dict(relations['Statement_Block'])
+
+        ordered_ids = list()
+        unordered_ids = list()
+
+        #storing the ordered IDs so as to sort the unordered IDs
+        for tuple in statement_metadata:
+            ordered_ids.append(tuple[0])
+
+        for tuple in relations['Statement_Block']:
+            unordered_ids.append(tuple[0])
+
+        for ordered_tuple in statement_metadata:
+            line_value = ordered_tuple[1]
+            id_value = ordered_tuple[0]
+
+            # if key exists obtain value
+            if id_value in unordered_ids:
+        
+                sorted_statement_ids.append((id_value,dict_blocks[id_value]))
 
         return sorted_statement_ids

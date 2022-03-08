@@ -23,6 +23,9 @@ import pdb
 import sys
 import traceback
 import hashlib
+from numpy import block
+
+from sqlalchemy import false, true
 
 from sorting_handler import sorting_handler
 from file_handler import file_handler
@@ -47,7 +50,10 @@ def init_function():
 
 def generate_statement_identifier(b, i):
     """
+    DEPRECATED
+    
     Function to generate a unique statement ID.
+
     Args:
         b (bytecode): The disassembled bytecode object
         i (int): The index of the instruction
@@ -71,13 +77,23 @@ def generate_statement_identifier_md5(b, i):
 
     #unique hash for bytecode
     bytecode_string = str(b)
-    #bytecode_hash = hashlib.md5(bytecode_string.encode())
 
     index_string = str(i)
-    #index_hash = hashlib.md5(index_string.encode())
     
     bytecode_index_string = bytecode_string+index_string
     md5_hash = hashlib.md5(bytecode_index_string.encode())
+    hash_loc = md5_hash.hexdigest()
+
+    return hash_loc
+
+def generate_block_identifier_md5(i,i_offset):
+    
+    instruction_string = str(i)
+
+    index_offset_string = str(i_offset)
+
+    instruction_index_string = instruction_string+index_offset_string
+    md5_hash = hashlib.md5(instruction_index_string.encode())
     hash_loc = md5_hash.hexdigest()
 
     return hash_loc
@@ -95,27 +111,29 @@ def get_pushes(i,instruction_arg):
 
     """
     d = {'LOAD_FAST': 1,
-         'BINARY_ADD': 0,
+         'BINARY_ADD': 1,
          'LOAD_CONST': 1,
          'STORE_FAST': 0,
          
          'MAKE_FUNCTION': 1,
          'BUILD_TUPLE': 1,
          'LOAD_DEREF': 1,
-         'INPLACE_ADD': 0, #TODO: CHECK
+         'INPLACE_ADD': 1,
          'STORE_DEREF': 0,
          'LOAD_CLOSURE': 1,
          'STORE_NAME': 0,
          'LOAD_BUILD_CLASS': 1,
 
          'RETURN_VALUE' : 0,
-         'CALL_FUNCTION' : 1
+         'CALL_FUNCTION' : 1,
+         'POP_TOP' : 0,
+         'COMPARE_OP' : 0,
+         'POP_JUMP_IF_FALSE' : 0
          }
 
     if i.opname in d:
         return d[i.opname]
 
-        #TODO: FIX INPLACE_ADD
     return 0
 
 def get_pops(i,instruction_arg):
@@ -133,26 +151,27 @@ def get_pops(i,instruction_arg):
     """
     d = {
         'LOAD_FAST': 0,
-         'BINARY_ADD': 0, #TODO: CHECK
+         'BINARY_ADD': 2,
          'LOAD_CONST': 0,
          'STORE_FAST': 1,
          
          'MAKE_FUNCTION': 1,
          'BUILD_TUPLE': instruction_arg,
          'LOAD_DEREF': 0,
-         'INPLACE_ADD': 0, #TODO: CHECK
+         'INPLACE_ADD': 2,
          'STORE_DEREF': 1,
          'LOAD_CLOSURE': 0,
          'STORE_NAME': 1,
          'LOAD_BUILD_CLASS': 0,
 
         'RETURN_VALUE': 1,
-        'CALL_FUNCTION': instruction_arg
+        'CALL_FUNCTION': instruction_arg,
+        'POP_TOP' : 1,
+        'COMPARE_OP' : 1,
+        'POP_JUMP_IF_FALSE' : 1
          }
     if i.opname in d:
         return d[i.opname]
-    
-    #TODO: FIX INPLACE_ADD & BINARY_ADD
     
     return 0
 
@@ -193,15 +212,6 @@ def stack_handler(stack, instruction, identifier, instruction_arg):
 
         return stack
     
-    if opcode_name == "STORE_FAST":
-        for i in range(pushes):
-            stack.append(identifier)
-        
-        for i in range(pops):
-            stack.pop()
-
-        return stack
-    
     if opcode_name == "RETURN_VALUE":
         
         for i in range(pushes):
@@ -211,8 +221,211 @@ def stack_handler(stack, instruction, identifier, instruction_arg):
             stack.pop()
 
         return stack
+    
+    if opcode_name == "STORE_FAST":
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+
+    if opcode_name == "LOAD_CLOSURE":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "MAKE_FUNCTION":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "BUILD_TUPLE":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "LOAD_DEREF":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "INPLACE_ADD":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "STORE_DEREF":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "CALL_FUNCTION":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+        
+    if opcode_name == "STORE_NAME":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "LOAD_BUILD_CLASS":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "LOAD_NAME":
+        
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+
+    if opcode_name == "POP_TOP":
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+   
+    if opcode_name == "COMPARE_OP":
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+    if opcode_name == "POP_JUMP_IF_FALSE":
+        for i in range(pushes):
+            stack.append(identifier)
+        
+        for i in range(pops):
+            stack.pop()
+
+        return stack
+    
+
 
     #TODO: ADD OTHER OPCODES
+
+def block_handler(previous_instruction,current_instruction,next_instruction):
+    
+    # used to handle the first instruction (where there are no other previous instructions)
+    if(previous_instruction == None):
+        return true
+
+    previous_opcode = previous_instruction.opname
+    current_opcode = current_instruction.opname
+    next_opcode = next_instruction.opname
+    
+    # block start handler
+    if(is_jump(previous_opcode)==true):
+        return true
+    if(is_label(current_opcode,current_instruction.is_jump_target)==true):
+        return true
+
+    # block end handler
+    if(next_instruction == None):
+        return false
+    if(is_jump(current_opcode)==true):
+        return false
+    if(is_label(next_opcode, next_instruction.is_jump_target)==true):
+        return false
+
+    return None
+
+def is_label(opcode,jump_target):
+    """Deterines if the opcode provided is a label
+    Args:
+        opcode (_type_): The opcode
+        jump_target(bool) : If the statement is a jump target or not
+    Returns:
+        bool: true if the opcode is a label, false otherwise
+    """
+    #TODO: IMPLEMENT
+    if jump_target:
+        return true
+    return false
+
+def is_jump(opcode):
+    """Determines if the opcode provided is a jump
+
+    Args:
+        opcode (_type_): The opcode
+
+    Returns:
+        bool: true if opcode is a jump, false otherwise
+    """
+    if opcode == 'JUMP_FORWARD':
+        return true
+    if opcode == 'POP_JUMP_IF_TRUE':
+        return true
+    if opcode == 'POP_JUMP_IF_FALSE':
+        return true
+    if opcode == 'JUMP_IF_NOT_EXC_MATCH':
+        return true
+    if opcode == 'JUMP_IF_TRUE_OR_POP':
+        return true
+    if opcode == 'JUMP_IF_FALSE_OR_POP':
+        return true
+    if opcode == 'JUMP_ABSOLUTE':
+        return true
+
+    return false
 
 def main(function):
 
@@ -228,7 +441,7 @@ def main(function):
     global inner_code_object_address_index
     
     frame_stack = []
-    current_block = 0 
+    #current_block =
 
     push_value = set()
     statement_opcode = set()
@@ -251,112 +464,120 @@ def main(function):
     )
 
     bytecode = dis.Bytecode(function)
+    
     #find the total amount of bytecode instructions
-
     instructions_list = list(dis.get_instructions(function))
     instruction_size = len(instructions_list)
-
     largest_bytecode_offset = instructions_list[instruction_size-1].offset 
-    
+
+    block_identifier = None
+
     prev_instruction = None
+    next_instruction = None
     line_number = 0
-    line_number_table = line_number_table_generator(bytecode)
+    
+    #line_number_table = line_number_table_generator(bytecode)
 
     for i, instruction in enumerate(bytecode):
-
+        
         try:
-            
-            #stack = inspect.stack()
+            # setting the next instruction
+            if instruction.offset<largest_bytecode_offset:
+                next_instruction = instructions_list[i+1]
 
-            #frame = inspect.currentframe()
-
+            # instruction variables
             instruction_arg = instruction.arg
-            identifier = generate_statement_identifier_md5(bytecode, i)
+            instruction_identifier = generate_statement_identifier_md5(bytecode, i)
 
-            #stack_size = bytecode.codeobj.co_stacksize
-            #live_locals = bytecode.codeobj.co_nlocals
+            # block variables
+            is_new_block = block_handler(prev_instruction,instruction,next_instruction)
+            if(is_new_block):
+                block_identifier = generate_block_identifier_md5(i,instruction.offset)
+                
 
+            # line number generator
             if(instruction.starts_line!=None):
                 line_number = instruction.starts_line
-            #line_number = line_number_table[0][1]
+            
+            if line_number == 11:
+                print("2")
             bytecode_offset = instruction.offset #line_number_table[l_count][0]
 
             """
             line_arg is in the format -> <line_number>.<bytecode_offset>
-            TODO: add the amount of pushes & pops to stack
-            TODO: implement more opcodes
-            TODO: add statement_block
             """
-            line_arg = line_number + (bytecode_offset/largest_bytecode_offset)
+            line_arg = line_number + (bytecode_offset/(largest_bytecode_offset+1))
 
-            #add to current frame stack
-
-            statement_opcode.add((identifier, instruction.opname))
-            statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-            statement_pops.add((identifier, get_pops(instruction,instruction_arg)))
-            statement_code.add((identifier, str(function) ))
-            statement_metadata.add((identifier,line_arg))
+            statement_opcode.add((instruction_identifier, instruction.opname))
+            statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+            statement_pops.add((instruction_identifier, get_pops(instruction,instruction_arg)))
+            statement_code.add((instruction_identifier, str(function)))
+            statement_metadata.add((instruction_identifier,line_arg))
+            statement_block.add((instruction_identifier,block_identifier))
 
             if prev_instruction:
-                statement_next.add((identifier, generate_statement_identifier(prev_instruction, i - 1)))
+                statement_next.add((instruction_identifier, generate_statement_identifier_md5(prev_instruction, i - 1)))
+
+            # identify the block which the statement is in
+            # if block_handler(prev_instruction,instruction,)
 
             if instruction.opname == 'LOAD_CONST':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
                 
-                frame_stack = stack_handler(frame_stack,instruction,identifier,instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier,instruction_arg)
 
                 continue
 
             if instruction.opname == 'LOAD_FAST':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier,instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier,instruction_arg)
                 
 
                 continue
 
             if instruction.opname == 'BINARY_ADD':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'RETURN_VALUE':
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction, instruction_identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'STORE_FAST':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'LOAD_CLOSURE':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
 
@@ -364,9 +585,9 @@ def main(function):
                 
                 #TODO: ADD FRAME_STACK FUNCTIONALITY
 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
                 inner_code_object = list(bytecode)[i-2].argval
                 inner_fact_dict = main(inner_code_object)
@@ -378,80 +599,112 @@ def main(function):
 
             if instruction.opname == 'BUILD_TUPLE':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'LOAD_DEREF':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'INPLACE_ADD':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'STORE_DEREF':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'CALL_FUNCTION':
                 
                 #TODO: LOOK INTO CALL_FUNCTION
-                push_value.add((identifier, instruction.argval))
+                push_value.add((instruction_identifier, instruction.argval))
 
                 continue
 
             if instruction.opname == 'STORE_NAME':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
 
             if instruction.opname == 'LOAD_BUILD_CLASS':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
             
             if instruction.opname == 'LOAD_NAME':
                 
-                push_value.add((identifier, instruction.argval))
-                statement_pushes.add((identifier, get_pushes(instruction,instruction_arg)))
-                statement_pops.add((identifier,get_pops(instruction,instruction_arg)))
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
 
-                frame_stack = stack_handler(frame_stack,instruction,identifier, instruction_arg)
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
 
                 continue
+            
+            if instruction.opname == 'POP_TOP':
+                
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
+
+                continue
+            
+            if instruction.opname == 'COMPARE_OP':
+                
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
+
+                continue
+            
+            if instruction.opname == 'POP_JUMP_IF_FALSE':
+                
+                push_value.add((instruction_identifier, instruction.argval))
+                statement_pushes.add((instruction_identifier, get_pushes(instruction,instruction_arg)))
+                statement_pops.add((instruction_identifier,get_pops(instruction,instruction_arg)))
+
+                frame_stack = stack_handler(frame_stack,instruction,instruction_identifier, instruction_arg)
+
+                continue
+
+            #TODO: IMPLEMENT JUMP OPCODES
 
         finally:
             prev_instruction = instruction
@@ -488,6 +741,7 @@ def split_list(lst, size):
 
 def line_number_table_generator(bytecode):
     """
+    DEPRECATED
     Function which handles the generation of the line number table. 
 
     Args:
@@ -522,7 +776,7 @@ if __name__ == '__main__':
         
         function = init_function()
         
-        dis.dis(function)
+        #dis.dis(function)
         
         code_object = function.addition_numbers.__code__
 
@@ -537,6 +791,7 @@ if __name__ == '__main__':
         sorted_stmt_pops = sorter.sort_stmt_pops(out_obj)
         sorted_stmt_opcode = sorter.sort_stmt_opcodes(out_obj)
         sorted_stmt_code = sorter.sort_stmt_code(out_obj)
+        sorted_stmt_block =  sorter.sort_stmt_block(out_obj)
 
         # init file handler
         file = file_handler()
@@ -547,6 +802,7 @@ if __name__ == '__main__':
         file.save_to_csv(sorted_stmt_pops, "StatementPops")
         file.save_to_csv(sorted_stmt_opcode, "StatementOpcode")
         file.save_to_csv(sorted_stmt_code, "StatementCode")
+        file.save_to_csv(sorted_stmt_block,"StatementBlock")
 
         assert False
 
