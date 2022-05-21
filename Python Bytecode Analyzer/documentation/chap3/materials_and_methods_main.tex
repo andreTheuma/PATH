@@ -1,0 +1,248 @@
+\chapter{Methodology}
+    \par This chapter describes how the \nameref{sec:propsol} was implemented, and why certain decisions were taken regarding design implementation. This chapter also explores the problems encountered whilst formulating such a design.
+    %%TODO: finish section
+    \section{Initial Challenges}
+
+    \section{Abstract Design}
+    \par PATH is a three-phase bytecode inspection tool (Sections \ref{subsec:phaseoverview} \& \ref{sec:concimp} respectively). The high-level implementation is as follows; 
+    PATH iteratively inspects each bytecode instruction produced by the Python Compiler, generating facts as instructions are iterated through. 
+        \subsection{Phase Overview}
+        \label{subsec:phaseoverview}
+        \begin{itemize}
+            \item[1.] The preliminary phase is the setup phase. This phase tackles the initialization of all the global variables required for bytecode inspection along with the statement relations.
+            \item[2.] The second phase is the iteration phase; \acs{AIL}. This phase is where the main logic of the framework is found. The manipulation of local and global variables, pertaining to the IR and fact generation also occurs in this phase.
+            \item[3.] The third and final phase generates a block summary, by retrieving information from the generated facts in phase 2.   
+        \end{itemize}
+        
+        \begin{figure}
+            \centering
+
+            \begin{tikzpicture}
+					[
+						roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+						rectanglenode/.style={rectangle, draw=cyan!60, fill=cyan!20, very thick, minimum width=30mm, minimum height = 10mm},
+						transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},
+					]
+                    
+                    
+                    \node[rectanglenode] (main) at (0,0) {Setup Global Variables};
+                    \node[rectanglenode] (bil) [right=of main] {\acs{AIL}};
+                    \node[rectanglenode] (bs) [right=of bil] {Block Summaries};
+                    
+                    \node[] (entrytext) [above=of main] at(-1.5,0.75) {Entry};
+                    \node[] (filesavetext) [below=of bs] at(10.5,-0.75) {File};
+                    \node[] (savetext) [below=of bs] at(10.5,-1.2) {Saving};
+                    
+                    \draw[-latex] (main.east) -- (bil.west);
+                    \small
+                    \draw[-latex,line width=0.20mm,dashed,dash pattern=on 0.5mm off 0.25mm] (bil.200) to[bend left=(-100)] node[below]{Loop till last instruction} (bil.340);
+                    \normalsize
+                    \draw[-latex] (bil.east) -- (bs.west);
+
+                    \draw[-latex] (entrytext.west) to[bend left=-80] (main.west);
+                    \draw[-latex] (bs.east) to[out=0, in=90] (filesavetext.north);
+                    
+
+            \end{tikzpicture}
+
+            \caption{Phases of \acs{PATH}}
+            \label{fig:pathphases}
+        \end{figure}
+
+    \section{Concrete implementation}
+    \label{sec:concimp}
+        \subsection{Setup}
+            \par The setup stage is the entry point to the framework. This stage is simple; setting up of the basic variables, which provide a basis for the upcoming logic of \acs{PATH}.
+            \subsubsection*{Relation Initialization}
+            \par The first stage deals with the initialization of the \textit{Statement Relations}; imperative for fact generation.
+            Most of the relations are initially realized as sets. Lists are only used for the relations which are required to be stored in an ordered fashion. This requirement is motivated 
+            by the relations dependency, so as to achieve proper internal fact generation. These relations are \lstinline{simple_statement_ir}, \lstinline{statement_uses_local}, and \lstinline{statement_uses_global}.
+            By design, as one reaches the termination of \acs{PATH}, these relations are consolidated into a Python dictionary; returned as \lstinline{fact_dict}. An in-depth review of all relations is found in Section \ref{sec:factgen}
+
+            \subsubsection*{Global Variable Initialization}
+            \par Following the initialization of the relations, the \textit{Global Variables} are conceived. These variables are used throughout \acs{PATH}, namely for proper block and instruction variable handling, thus
+            are divided into two main distinct groups; Global Instruction Variables, and Global Block Variables. Any other variables are classified as Miscellaneous Variables. All Global Variables are initialized as empty variables, unless said otherwise.
+
+        \subsection{\acs{AIL}}
+        \label{subsec:AILimp}
+        \par An abundant amount of the framework's logic is packed into the \acs{AIL}. This loop iterates through every bytecode instruction, recording attributes of the instruction, and how 
+        each instruction interacts with the previous instruction, and will interact with the next instruction. The iterative nature (known as \acs{III}) of the \acs{AIL} was inspired by the Python VM Innards workings (See Figure \ref{fig:vm_innards}). Inspecting the bytecodes in such a fashion (i.e. generating all the facts iteratively) is arguably faster than having 
+        a phase per fact needed to be generated. In addition to fact generation, we also incorporated \acs{CFA} and \acs{IR} generation in the \acs{III} fashion; taking a different approach to how current inspection tools operate (such as Pylint), whereby first the \acs{IR} is generated, following an analysis conducted on the \acs{IR} itself. This is a multiphase process, in comparison to the single phase 
+        design created by \acs{AIL}. The \acs{AIL} is visualised in Figure \ref{fig:ailinnards}.
+            \subsubsection*{Bytecode Validity}
+            Firstly, bytecode instruction validity is ensured via the specified opcode dictionary (supported Bytecode Instructions can be found in \nameref{table:opcode_table}).
+            \subsubsection*{Local Variable Initialization}
+            \par Following verification, local instruction variables are set. These variables are the first to be set as they are the basis for fact generation and block generation. These variables are also the foundation for the \acs{IR} generated, namely for setting the instruction line number 
+            and the instruction identifier. The former is dynamically set, dependent on the amount of opcodes that need to be processed, whilst the latter is generated by a specially designed \acs{MD5} algorithm, creating parameter dependent unique hashes for every instruction.
+            \subsubsection*{Block Handling}
+            \par Block handling is the subsequent step, modifying the local block variables. In \acs{PATH} the notion of a [elementary] block is a primitive from which a program is constructed by. Entry and exit points of blocks depend on the current program flow (as seen in Section \ref{subsec:dfa}); they form part of the 
+            basis of both \acs{DFA} and \acs{CFA}. New blocks are uniquely identified (similarly to the instruction identifier) and instructions are bound to their respective block (as is seen in Section \ref{sec:factgen}). By design, each block
+            has its own stack and unique properties (see Section \ref{sec:cfimp}) that are used as a basis for both fact generation and accurate block analysis.
+            \par An interesting design feature of \acs{AIL} is the incorporation of both Block Handling and Control Flow Analysis in one sub-phase. Moreover, this sub-phase is only executed if an instruction forms part of a new block; avoiding redundant execution stages.  
+            \subsubsection*{Opcode Handling}
+            \par The penultimate stage handles general opcode tasks (i.e: general relation generation) and opcode specific tasks (i.e: recursive \lstinline|MAKE_FUNCTION| dictionary nesting). There exist opcodes, such as \lstinline|MAKE_FUNCTION| which require additional parameters to be considered for accurate fact generation. The incorporation of the opcode specific \acs{IR} generation in this stage, expedites the process of fact and IR generation, compared to 
+            having the \acs{IR} generated in a separate stage.
+            \subsubsection*{Updating Global Variables}
+            \par The final stage in the \acs{AIL} simply updates the global variables that are to be used in the next iteration.
+
+        %TODO: Add diagram of AIL
+        
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                [
+                    roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+                    rectanglenode/.style={rectangle, draw=cyan!60, fill=cyan!20, very thick, minimum width=30mm, minimum height = 10mm},
+                    transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},    
+                    startstop/.style={rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!30},
+                    process/.style= {rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=orange!30},
+                    decision/.style = {diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30},
+                    io/.style = {trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30}
+                ]
+
+                %\node
+
+
+
+            \end{tikzpicture} 
+            \caption{\acs{AIL} Innards}
+            \label{fig:ailinnards}
+        \end{figure}
+        
+        \subsection{Block Summary}
+        \par The termination of \acs{PATH} is brought about by the block summaries, conducted on the facts generated in the \acs{AIL}. A block summary is generated for every block, showing where blocks start and end; useful for external debugging purposes and instruction grouping. The generation of a block summary is a form of block analysis. 
+
+            
+    \section{Fact Generation} \label{sec:factgen}
+    \par In \acs{PATH} a fact is information which is generated from the program that is being inspected. These facts are useful for end users as they provide deeper insight in the operations that occur in the program, reducing the overall engineering complexity of program analysis. \acs{PATH} produces three types of facts: Statement facts, Block facts, and Program facts.
+    Facts are generated in \acs{III} fashion (per bytecode instruction) and outputted to the user as \textit{.fact} files. A table of all the facts and their descriptions is found in the \nameref{table:facts_table}. 
+
+    \section{Control Flow} \label{sec:cfimp}
+    \par Control Flow in \acs{PATH} is implemented within the block handling stage in \acs{III} fashion, as mentioned in Section \ref{subsec:AILimp}. The block handling stage is broken down in three main parts; block variable generation, control flow handling and block \acs{I/O}.
+        \subsubsection*{Block Variable Generation}
+        \par Block variables are only generated if the start of a new block is detected. New blocks are based on jumps and labels, whereby a new block starts after a jump instruction or at a label. The latter is a jump target (i.e: which bytecode a jump instruction would jump to) and the former is self-explanatory. 
+        The detection of a new block triggers the block variables to be generated along with certain facts pertaining to block information.    
+        
+
+        \begin{lstlisting}[language=Python,caption= Conditional statement script]
+            if x>3:
+                #do something#
+            else:
+                #do something else#
+        \end{lstlisting}\label{lst:condscriptLIst}
+        %TODO: FIX UP DIAGRAM
+        %TODO: use \usepackage{codeanatomy} for annotations
+        \begin{lstlisting}[language=bash,caption= Bytecode Dissasmbly of Listing \ref{lst:condscriptLIst},numbers=none]
+            1           0 LOAD_GLOBAL              0 (x)
+                        2 LOAD_CONST               1 (3)
+                        4 COMPARE_OP               4 (>)
+                        6 POP_JUMP_IF_FALSE       10
+
+            2           8 JUMP_FORWARD             0 (to 10)
+
+            4     >>   10 LOAD_CONST               0 (None)
+            12          RETURN_VALUE
+        \end{lstlisting}
+
+        \subsubsection*{Control Flow Generation}
+        \par Following the initialization, links between the edges of basic blocks are generated; as shown in Figure \ref{fig:cfhandling}. It is ensured that upon encountering a jump, no redundant relations are created between blocks; taking care to only create relations between linked block edges (i.e: a block's \textit{if} block cannot enter the same \textit{else} block). These type 
+        of relations are avoided by creating a unique identifier (\lstinline|block_link_id|); uniquely identifying a link between two blocks.
+
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                [
+                    roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+                    rectanglenode/.style={rectangle, draw=cyan!60, fill=cyan!20, very thick, minimum width=30mm, minimum height = 10mm},
+                    transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},    
+                    startstop/.style={rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!30},
+                    process/.style= {rectangle, minimum width=2cm, minimum height=1cm, text centered, draw=black, fill=orange!30},
+                    decision/.style = {diamond, minimum width=3cm, minimum height=.5cm, text centered, draw=black, fill=green!30,align=center},
+                    io/.style = {trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=2cm, minimum height=1cm, text centered, draw=black, fill=blue!30, align=center}
+                ]
+                
+                \node [startstop] (entry) {Start};
+                \node [decision] (1stdes) [below=of entry] {Is First \\ Instruction?};
+                \node [decision] (2nddes) [below=of 1stdes] { Is Previous \\ Instruction \\Jump?};
+                \node [process] (1stproc) [below= of 2nddes] {\textit{Else block} variable generation};
+                \node [io] (2ndio) [below= of 1stproc] {Write \\ \textit{(prev\_id, curr\_id)} \\ to file};
+                \node [io] (3rdio) [below= of 2ndio] {Write \\  \textit{(prev\_id, branch\_id)} \\ to file};
+                \node [io] (4thio) [below= of 3rdio] {Write \textit{block} \\ types to file};
+                \node [startstop]  [below=of 4thio] (end) {End};
+                
+                \node [io] (5thio) [left= of end] {Write \\  \textit{(prev\_id, curr\_id)} \\ to file};
+                \node [io] (6thio) [right= of end] {Write \\  \textit{(-1, curr\_id)} \\ to file};
+                
+
+                \draw [-latex] (entry) -- (1stdes);
+                \draw [-latex] (1stproc) -- (2ndio);
+                \draw [-latex] (2ndio) -- (3rdio);
+                \draw [-latex] (3rdio) -- (4thio);
+                \draw [-latex] (4thio) -- (end);
+                \draw [-latex] (5thio) -- (end);
+                \draw [-latex] (6thio) -- (end);
+
+                \draw [-latex] (1stdes) -- node[anchor=east] {Yes} (2nddes);
+                \draw [-latex] (2nddes) -- node[anchor=east] {Yes} (1stproc);
+
+                \draw [-latex] (1stdes) -| node[anchor=south] {No} (5thio);
+                \draw [-latex] (2nddes) -| node[anchor=south] {No} (6thio);
+                
+            \end{tikzpicture}
+            \caption{Control Flow Handling}
+            \label{fig:cfhandling}
+        \end{figure}
+
+        \section{\acs{IR} Generation}
+        \label{sec:irgen}
+        \par The \acs{IR} that \acs{PATH} creates is intended to reduce the engineering complexity for further program analysis. The complex task of recording variables that are consumed and created in a more concise form
+        was needed, so as to resolve the tedious task of manually keeping note of all stack operations. \acs{PATH} offers this functionality for two primary operation subtypes:
+        \begin{enumerate}
+            \item Binary Operation Binding
+            %\item Function Construction Binding %%TODO: remove??
+            \item Function Calling Binding
+        \end{enumerate}
+        %TODO:CHANGE AS IR CHANGES
+        Providing a standardized representation for the cases above greatly simplifies the final representation of a program. \acs{IR} generation takes a \acs{III} approach; following a sequential iterative generational pattern.
+        \begin{description}
+            \item[Binary Operation Binding] takes the arguments from the operation, binding them to a variable, summarizing a binary operation as follows: 
+            \begin{lstlisting}[language=bash,caption=Binary Operation Binding Syntax,numbers=none]
+<inst_id> <var_id> = <inst_name> <arg1> <operation> <arg2>
+            \end{lstlisting}
+
+            \item[Function Calling Binding] takes the function and arguments passed to the said function, binding them to the function identifier, indicated by a succeeding \lstinline|STORE_FAST| instruction. This is shown below.
+            \begin{lstlisting}[language=bash, caption=Function Calling Binding,numbers=none]
+<inst_id> <func_id> = CALL_FUNCTION <arg1> ... <argN>
+            \end{lstlisting}
+        \end{description}
+
+    \pagebreak
+    \section{Technical Implementation}
+            
+            \begin{description}
+                \item Global Instruction Variables monitor several attributes of the individual bytecode instructions:
+                \item[prev\_instruction] keeps track of instruction \textsubscript{i-1}. Previous instructions are useful as they allow for proper block creation, and are vital for the generation of control flow graphs.
+                \item[prev\_instruction\_identifier] records the previous instruction identifier. The identifier is stored in a separate variable, and not extracted from \lstinline|prev_instruction| for the sake of brevity. Variable is initialized to {\bfseries-1}, indicating the start of the program.
+                \item[instruction\_list] produces a list of all the bytecode instructions that will be enumerated through in the \acs{AIL}. This list is immediately created to ease the creation of other metrics, such as obtaining the total amount of instructions. 
+                \item[next\_instruction] pulls the next instruction from \lstinline|instruction_list|, if there is a next instruction. This variable is used for correct block handling and \acs{IR} generation.
+                \item[instruction\_size] finds the amount of bytecode instructions there are in the current scope, that need to be read. Variable is initialized.
+                \item[instructions\_offset\_list] stores all the offsets of the bytecode instructions. It is interesting to note, that through this dissertation it has been discovered that bytecode instructions are always 2 bytes in size. Each byte is reserved for the opcode and oparg respectively.
+                \item[largest\_bytecode\_offset] stores the largest bytecode offset. This represents the last instruction, and is used to generate an upper limit for the custom line number argument. Variable is initialized.
+                \item[line\_number] monitors the current line number argument of each bytecode instruction. Bytecode instructions do not always have a line number, indicating that the instruction is between line numbers. When an instruction is in such a state, it relies on the custom line number argument. %%TODO: add correct ref
+            \end{description}
+
+            \begin{description}
+                \item Global Block Variables perform a vital role in distinguishing blocks; useful for block analysis.
+                \item[block\_identifier] keeps track of the current instruction block.
+                \item[prev\_block\_identifier] records the previous block identifier. Variable is initialized to {\bfseries-1}, indicating the first block of the program.
+            \end{description}
+
+            \begin{description}
+                \item The following variables form part of the Miscellaneous Variables. These form part of the backbone structure of \acs{PATH}:
+                \item[frame\_stack] acts as a frame stack, having instructions pushed onto and popped off of accordingly. This stack is flushed with every new function call.
+                \item[prev\_frame\_stack] records the previous frame stack, from a previous function call. %%TODO: MAYBE REMOVE...no use
+                \item[block\_stack] acts as a stack, having instructions pushed onto and popped off of accordingly. This stack is flushed with every new block. An interesting insight that was discovered is that Python operates in a way whereby prior to exiting a block, no instructions are left on the stack.
+                \item[prev\_block\_stack] records the previous block stack.
+                \item[tos] stores the value at the top of the stack. Variable is used for convenience.
+                \item[bytecode] stores the disassembled code object.  
+            \end{description}

@@ -1,0 +1,42 @@
+VERSION 3.3:
+        - Fix ligatures for hyphens
+
+VERSION 3.2:
+        - Fix OT1 encoding with italic shape
+        - Fix packaging according to CTAN guidelines
+
+VERSION 3.1:
+        - Fix kerning with uppercase Greek diacritics
+        - Add "scaled" alias option
+
+VERSION 3.0:
+        - Update .ttf files to version 2.015
+        - Complete rewrite of the TeX metric file generation (otftotfm is now
+          used instead of fontinst)
+        - Support for XeLaTeX and LuaLaTeX
+        - Add support for figure variant selection
+        - Drop faked smallcaps support
+
+VERSION 2.2:
+        - Update .ttf files to version 1.104
+        - Update documentation to mention latofonts.com
+
+VERSION 2.1:
+        - Update .ttf files to version 1.101
+        - Fix bad weight substitution when using light weight and slanted shape
+        - Remove unneeded call to textcomp package in lato.sty
+
+VERSION 2.0:
+        - Complete rewrite of the fontinst driver file
+        - Rename .vf and .tfm files based on the pattern <font>-<encoding>
+        - Fix NFSS series for hairline variant ("el" instead of "ul")
+        - Modify paths of the archive: documentation is now in doc/fonts/lato/
+          and sources in source/fonts/lato/
+
+VERSION 1.2:
+        - Fix small caps series in TS1 encoding
+        - Remove "light"/"black" class options
+        - Add samples PDF
+
+VERSION 1.1:
+        - Update .ttf files to version 1.011

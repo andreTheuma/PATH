@@ -1,3 +1,4 @@
+import dis
 class nested_func:
         
     def funcF(x):
@@ -13,3 +14,5 @@ class nested_func:
                 return x
 
         return X
+
+dis.dis(nested_func.funcF)

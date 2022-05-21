@@ -1,0 +1,238 @@
+\documentclass[12pt, a4paper]{report}
+
+\usepackage{fyp}
+
+
+%%these packages are not really necessary if you dont need the code and proofs environments
+%%so if you like you can delete from here till the next comment
+%%note that there are some examples below which obviously won't work once you remove this part
+\usepackage{verbatim}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage[scaled=0.85]{beramono}
+
+%%this environment is useful if you have code snippets
+\newenvironment{code}
+{\footnotesize\verbatim}{\endverbatim\normalfont}
+
+%%the following environments are useful to present proofs in your thesis
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\theoremstyle{definition}%plain}
+\newtheorem{example}{Example}[section]
+\theoremstyle{definition}%remark}
+\newtheorem{proposition}{Proposition}[section]
+\theoremstyle{definition}%remark}
+\newtheorem{lemma}{Lemma}[section]
+\theoremstyle{definition}%remark}
+\newtheorem{corollary}{Corollary}[section]
+\theoremstyle{definition}%remark}
+\newtheorem{theorem}{Theorem}[section]
+%%you can delete till here if you dont need the code and proofs environments
+
+
+
+\setlength{\headheight}{15pt}
+%\overfullrule=15pt
+
+
+\begin{document}
+
+
+
+%%make sure to enter this information
+\title{Program Analysis: Towards the Analysis of CPython Bytecode
+    \large{Progress Report}
+}
+\author{André Theuma}
+\date{17/12/2021}
+\supervisor{Dr. Neville Grech}
+\department{Faculty of ICT}
+\universitycrestpath{uom-logo}
+\submitdate{17/12/2021} 
+
+\frontmatterprogreport
+
+\begin{abstract}
+    \par Software systems are heavily relied on by businesses for their day to day management and are also used to protect critical data.
+    In this day and age having a secure system is more important than ever before, thus one must ensure that the system's security is tested out and analysed beforehand.
+    \par Program Analysis is a process by which a system's correctness may be tested. In this dissertation, a Static Analysis Framework shall be implemented for its use in the
+    CPython environment.
+
+\end{abstract}
+
+\tableofcontents
+
+\newgeometry{top=2cm}
+\listoffigures
+\restoregeometry
+
+%%\listoftables
+
+
+
+\mainmatter
+
+\chapter{Introduction \& Motivation}
+    \par Program analysis is the (now automated) process by which a program can be analysed %\cite{nielson2004principles}.
+    The results produced 
+    by the analysis can then be used for one of two things; Program Optimization or Program Correctness. There are two different
+    types of analyses, Static analysis and Dynamic analysis. Typically both analyses are used in conjunction with each other, but in different
+    production phases. 
+    \par Static analysis is used in the development phase of a program, prior to testing. With this analysis, the root cause 
+    of many basic vulnerabilities is found.
+    \par Dynamic analysis is performed during runtime and is very resource intensive, in comparison to Static analysis. 
+    Dynamic program analysis is more commonly known as correctness runtime debugging. %\cite{bruegge1993framework}
+
+    \par In this dissertation, the main topic of focus shall be on disassembling CPython source code into 
+    CPython bytecode and performing a relevant analysis on the produced relations.
+    CPython is the most widely used implementation of Python, which is one of the most popular languages. 
+    Its use ranges from web-development to enterprise solutions and embedded development. As of today, it is 
+    rated as one of the languages used mostly by developers and in several industries %\cite{pyStat}. 
+
+    The relations produced after the disassembly will then be broken down into a more elementary form 
+    of relation which is simpler to digest, for the user. Different queries will then be performed on these 
+    new relations, depending on the use cases needed, finally producing facts. The query system will be 
+    of a Soufflé Datalog implementation so as to facilitate the process.
+    \section{Non-Triviality}
+    \par Performing Static Program analysis is non-trivial as it forms an essential part to providing secure software and protecting data
+    from possible attackers. Program correctness essentially provides data confidentiality and data integrity. %\cite{moller2012static} 
+
+    
+\chapter{Background Research \& Literature Review}
+
+    \par The project is split into two main sections. The disassembly of functions into bytecode with it being processed by 
+    the bytecode analyser would form part of the first section, and the Soufflé queries would pertain to the second section of 
+    this project.
+
+    \section{Bytecode} In CPython we find that the source code is firstly translated into an intermediate language, known as the {\fontfamily{cmtt}\selectfont 
+    bytecode%
+    },
+    and is then passed through and executed by the virtual machine (PVM) %\cite{ike2015inside},
+    which is written in C, hence CPython.
+    The {\fontfamily{cmtt}\selectfont 
+    bytecode%
+    } is exposed by the use of the {\fontfamily{cmtt}\selectfont 
+    dis%
+    }
+    module provided by Python %\cite{disModule}.
+    The {\fontfamily{cmtt}\selectfont 
+    dis%
+    } module provides the user
+    with the bytecode API wrapper, in which multiple functions may be used to exploit different properties of the source code.
+    For bytecode analysis these functions are used from the aforementioned module; 
+    {\fontfamily{cmtt}\selectfont 
+    dis.Bytecode()%
+    } %\cite{disModule} and {\fontfamily{cmtt}\selectfont 
+    dis.dis()%
+    %\cite{disModule}.
+    The former iterates over each bytecode instance as an {\fontfamily{cmtt}\selectfont 
+    Instruction%
+    } instance %\cite{disModule}. 
+    The latter process the source code line by line, and disassembles every object 
+    into its corresponding bytecode representation. The bytecode analyser that will be implemented, will disassemble methods
+    and classes. When a class is passed to the disassembler, the disassembler disassembles all the methods in the class object,
+    printing every bytecode instruction on a new line.
+    The {\fontfamily{cmtt}\selectfont 
+    Instruction%
+    } 
+    instance holds the following attributes; 
+    {\fontfamily{cmtt}\selectfont 
+     opcode%
+    },
+    {\fontfamily{cmtt}\selectfont 
+     opname%
+    },
+    {\fontfamily{cmtt}\selectfont 
+     arg%
+    },
+    {\fontfamily{cmtt}\selectfont 
+     argval%
+    },
+    {\fontfamily{cmtt}\selectfont 
+     argrepr%
+    },
+    {\fontfamily{cmtt}\selectfont 
+     offset%
+    },
+    {\fontfamily{cmtt}\selectfont 
+     starts\_line%
+    },
+    {\fontfamily{cmtt}\selectfont 
+     is\_jump\_target%
+    } %\cite{disModule}.
+
+    \par Each attribute contains information which is relevant to the current bytecode instruction.
+    
+    \section{Soufflé} The second part of the project relies heavily on Soufflé which is an open source
+    framework, which performs static program analysis to generate facts %\cite{jordan2016souffle}. 
+    Soufflé is extremely fast in comparison
+    to SQL/Datalog and has very simple syntax, which makes it a very powerful and user friendly tool. The language is based
+    upon Datalog but has state of the art performance %\cite{jordan2016souffle},
+    allowing analysis to be performed on large libraries,
+    which previously would be infeasible. 
+    
+    \par Soufflé's fast performance may be credited to its method of evaluating Datalog programs. Soufflé synthesizes and compiles
+    the Datalog program into native C++ code. This is possible by firstly compiling the Datalog program into Relational-Algebra-Machine Programs (RAM)
+    RAM programs are evaluated by elaborate data indexing techniques and multi-threaded query processing. These RAM programs can then be compiled
+    into C++. This is further compiled into machine code, which is what allows for such fast execution. %\cite{varAwareDlog}
+
+
+\chapter{Methods \& Techniques Planned}
+The Methodology planned to carry out this project starts off by creating the CPython bytecode analyser. This analyser will disassemble 
+any function or class object passed to it and its bytecode instructions will be inspected and analysed. The PVM (Python Virtual Machine)
+stack operations will be taken note of after every bytecode instruction. From this disassembly facts will then be created. The facts produced will
+form part of the following spec; a fact might make reference to the value pushed to the stack ({\fontfamily{cmtt}\selectfont 
+PushValue%
+}), its code object reference ({\fontfamily{cmtt}\selectfont 
+Statement\_Code%
+}), a reference to the next instruction ({\fontfamily{cmtt}\selectfont 
+Statement\_Next%
+}), a reference to the instruction's opcode ({\fontfamily{cmtt}\selectfont 
+Statement\_Opcode%
+}), and a reference to the amount of operations performed on the stack ({\fontfamily{cmtt}\selectfont 
+Statement\_Pushes, Statement\_Pops%
+}).
+\par These facts are to be stored in a Datalog compatible format (csv) so that a Datalog analysis can be performed on them. The type of analysis 
+that will be done is still yet to be discussed.
+
+
+\chapter{Evaluation Strategy}
+\par The two main evaluation techniques are the following;
+    \begin{itemize}
+        \item Evaluate bytecode, analyse each bytecode instruction \& produce facts.
+        \item Perform meaningful queries on facts generated by the bytecode analyser.
+    \end{itemize}
+
+    From these evaluation techniques, a report might be produced illustrating the queries \& their results.
+
+\chapter{Project Deliverables}
+
+    \begin{itemize}
+        \item A Final Year Project Report, including any relevant material used in the project.
+        \item The implementation of the CPython Bytecode Analyser, \& the function or class objects used.
+        \item The facts generated, the Datalog queries along with their results.
+    \end{itemize}
+
+\bibliomatter
+
+
+
+\bibliographystyle{abbrv}
+    \bibliography{citation}
+        
+        %\cite{nielson2004principles}
+        %\cite{bruegge1993framework}
+        %\cite{moller2012static}
+        %\cite{pyStat}
+        %\cite{aycock1998converting}
+        %\cite{ike2015inside}
+        %\cite{disModule}
+        %\cite{jordan2016souffle}
+        %\cite{varAwareDlog}
+
+\end{document}

@@ -1,15 +1,491 @@
 //---------------------------------------------------------------------------------------//
+// ** Type Setup ** //
+
 // setting up types //
 .type Statement <: symbol
-.type Opcode <: symbol
+.type Variable <: symbol
+.type Address <: symbol
+.type Code <: symbol
+
+//---------------------------------------------------------------------------------------//
+// ** Functor Definitions ** //
+
+//  converts a hexadecimal number to a decimal number
+// .functor hexa_to_number(symbol):number
+
+
 //---------------------------------------------------------------------------------------//
 // used to return the identifier //
 .decl identifier_address(address: Statement)
 identifier_address(address) :- identifier_address(address).
 
-.decl opcode_value(instruction: Opcode)
+.decl opcode_value(instruction: Statement)
 opcode_value(instruction) :- opcode_value(instruction).
+
 //---------------------------------------------------------------------------------------//
+// ** File Reading ** //
+
+// reading the files //
+.decl Statement_Pushes(address: Statement, n: number)
+.input Statement_Pushes(IO = "file", filename = "StatementPushes.facts", delimeter="\t")
+
+.decl Statement_Pops(address: Statement, n: number)
+.input Statement_Pops(IO = "file", filename = "StatementPops.facts", delimeter="\t")
+
+.decl Statement_Opcode(address: Statement, opcode: Statement)
+.input Statement_Opcode(IO = "file", filename = "StatementOpcode.facts", delimeter="\t")
+
+.decl Statement_Code(address: Statement, code: Statement)
+.input Statement_Code(IO = "file", filename = "StatementCode.facts", delimeter="\t")
+
+.decl Statement_Metadata(address: Statement, line_number: number)
+.input Statement_Metadata(IO = "file", filename = "StatementMetadata.facts", delimeter="\t")
+
+.decl Statement_Block(address: Statement, block_identifier: Statement)
+.input Statement_Block(IO = "file", filename = "StatementBlock.facts", delimeter="\t")
+
+.decl Statement_Block_Stack_Delta(address: Statement, delta: number)
+.input Statement_Block_Stack_Delta(IO = "file", filename = "StatementStackDelta.facts", delimeter="\t")
+
+.decl Statement_Pop_Delta(address: Statement, delta: number)
+.input Statement_Pop_Delta(IO = "file", filename = "StatementPopDelta.facts", delimeter="\t")
+
+.decl Statement_Defines_Local(address: Statement, address_variable: Statement)
+.input Statement_Defines_Local(IO = "file", filename = "StatementDefinesLocal.facts", delimeter="\t")
+
+.decl Statement_Uses_Local(address: Statement, address_using: Statement, arg_number:number)
+.input Statement_Uses_Local(IO = "file", filename = "StatementUsesLocal.facts", delimeter="\t")
+
+.decl Statement_Next(address: Statement, address_prev: Statement)
+.input Statement_Next(IO = "file", filename = "StatementNext.facts", delimeter="\t")
+
+.decl Statement_Block_Head(address: Statement, block_identifier:Statement)
+.input Statement_Block_Head(IO = "file", filename = "StatementBlockHead.facts", delimeter="\t")
+
+.decl Statement_Block_Tail(address: Statement, block_identifier:Statement)
+.input Statement_Block_Tail(IO = "file", filename = "StatementBlockTail.facts", delimeter="\t")
+
+//TODO: RENAME to Statement_Block_Pops
+.decl Statement_Block_Pop_Delta(address: Statement, delta: number)
+.input Statement_Block_Pop_Delta(IO = "file", filename = "TotalStatementPopDelta.facts", delimeter="\t")
+
+.decl Block_To_Block(block_identifier_prev: Statement, block_identifier: Statement)
+.input Block_To_Block(IO = "file", filename = "BlockToBlock.facts", delimeter="\t")
+
+//TODO:
+.decl Statement_Block_Stack_Size(address: Statement, size: number)
+.input Statement_Block_Stack_Size(IO = "file", filename = "StatementBlockStackSize.facts", delimeter="\t")
+
+//---------------------------------------------------------------------------------------//
+
+//.decl Block_Output_Contents(block_identifier: Statement, outputs: number)
+
+// n is the pop delta; m is the stack delta
+//Block_Output_Contents(block_identifier, n+m):-
+//    Statement_Block_Pop_Delta(instruction, n),
+//    Statement_Block_Stack_Delta(instruction,m),
+//    Statement_Block_Tail(instruction,block_identifier).
+
+.decl Block_Output_Count(block_identifier:Statement, number_of_outputs:number)
+
+Block_Output_Count(block_identifier, n):-
+     Statement_Block_Tail(tail_instruction,block_identifier),
+     Statement_Block_Stack_Size(tail_instruction,n).
+     //Statement_Pop_Delta(tail_instruction,n),
+     //Statement_Block_Stack_Delta(tail_instruction,m).
+
+.decl Block_Input_Count(block_identifier:Statement, number_of_outputs:number)
+
+Block_Input_Count(block_identifier,n):-
+    Block_To_Block(prev_block_identifier,block_identifier),
+    Block_Output_Count(prev_block_identifier,n).
+
+.decl Block_Output_Contents(block_identifier:Statement, variable: Variable)
+
+Block_Output_Contents(block_identifier,variable):-
+    Statement_Block_Tail(tail_instruction,block_identifier),
+    Statement_Block_Pop_Delta(tail_instruction)
+
+
+//.type Variable <: Statement
+// a statement can be a variable
+
+//.decl BlockInputContents(block: Block, variable: Variable, n: Number)
+//.decl BlockOutputContents(block: Block, variable: Variable, n: Number)
+
+//BlockInputContents(block, variable, n) :-
+//    Block_To_Block(prev, block),
+//    BlockOutputContents(prev, variable, n).
+// Case 1 - element from input has not been overwritten
+//BlockOutputContents(block, variable, n_new) :-
+//    Statement_Block_Tail(tail, block),
+//    Statement_Block_Pop_Delta(tail, n_popped),
+//    Statement_Block_Stack_Delta(tail, n_shifted),    
+//    BlockInputContents(block, variable, n_notoverwritten),
+//    n_notoverwritten > n_popped, // important condition
+//    n_new = n_notoverwritten - n_shifted, // Maybe - ?
+//   n_new > 0, n_new < 30. // sanity checking
+
+// Case 2 - element from input emerges from this block
+//BlockOutputContents(block, variable, n_new) :-
+//    Statement_Block_Tail(tail, block),
+//   Statement_Block_Pop_Delta(tail, n_popped),
+//    Statement_Block_Stack_Delta(tail, n_shifted), 
+//    LocalStackContents(tail, n_new, variable),
+//   n_new < n_popped. // important condition
+
+// LocalStackContents is a relation that gives you for any instruction, what the stack looks like in terms of instructions WITHIN the same block (see global.dl in gigahorse-toolchain)
+
+
+
+//---------------------------------------------------------------------------------------//
+// ** File Saving ** // 
+
+//.output Block_Input_Contents(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/test_BLOCK_INPUT_CONTENTS.csv", delimeter="\t")
+//.output Block_Output_Contents(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/test_BLOCK_OUTPUT_CONTENTS.csv", delimeter="\t")
+.output Block_Input_Count(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/test_BLOCK_INPUT_COUNT.csv", delimeter="\t")
+.output Block_Output_Count(IO = "file", filename = "/Users/andretheuma/Documents/Andre/Andre's documents/School/UoM Computing Science/3RD Year/FYP/CS_Final_Year_Project/Python Bytecode Analyzer/analysis/test_BLOCK_OUTPUT_COUNT.csv", delimeter="\t")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//---------------------------------------------------------------------------------------//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// statements which have over 0 pushes in the block are the input contents of that block
+/* .decl Block_Input_Statements(statement_address: Statement, block_address: Statement)
+Block_Input_Statements(statement_address,block_address) :- 
+    ((n>0) , Statement_Pushes(statement_address,n)),
+    Statement_Block(statement_address,block_address).
+    //Statement_Block_Head(statement_address,block_address).
+
+.decl Block_Input_Contents(statement_address:Statement, block_address:Statement)
+Block_Input_Contents(statement_address, block_address) :- 
+Statement_Uses_Local(_,statement_address,_),
+Block_Input_Statements(statement_address, block_address). */
+
+//.decl Block_Converter(statement_address:Statement, block_address)
+    
+// statements which has over 0 pops in a block are the output contents of that block
+/* .decl Block_Output_Statements(statement_address: Statement, block_address: Statement)
+Block_Output_Statements(statement_address,block_address) :-
+    ((n>0) , Statement_Pops(statement_address, n)),
+    Statement_Block_Tail(statement_address,block_address).
+
+.decl Block_Output_Contents(statement_address: Statement, block_address: Statement)
+Block_Output_Contents(statement_address, block_address) :-
+    Statement_Uses_Local(_,statement_address,_),
+    Block_Output_Statements(statement_address, block_address). */
+    
+
+//---------------------------------------------------------------------------------------//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//---------------------------------------------------------------------------------------//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//.decl Statement_Next(address: Statement, opcode: Opcode)
+//.input Statement_Next(IO = "file", filename = "StatementNext.facts", delimeter="\t")
+/*
+//---------------------------------------------------------------------------------------//
+// ** Definitions ** //
+
+//  Input file definitions //
+Statement_Pushes(address, 1).
+Statement_Pops(address, 1).
+Statement_Opcode(address, opcode).
+Statement_Metadata(address, line_number).
+
+//  Checks if value is a variable
+.decl Is_Variable(n: Variable)
+
+//  Gives the statement number
+.decl Statement_Number(statement: Statement, n: number)
+Statement_Number(statement,)
+
+//  Maps a statement to a variable
+.decl Statement_Variable(statement: Statement, variable : Variable)
+
+
+
+//---------------------------------------------------------------------------------------//
+// ** Basic Block Methods ** //
+
+//  Determines if statement is the start of a basic block
+.decl Is_Start_Of_Block(address: Address)
+
+Is_Start_Of_Block(address) :-
+    Statement_Opcode(address,JUMP_ABSOLUTE(address)).
+
+
+
+
+//---------------------------------------------------------------------------------------//
+// ** Stack Methods ** //
+
+//  Computes the delta of the current statement in the stack
+.decl Statement_Stack_Delta(statement: Statement, n: number).
+
+
+//.decl Stack_Contents(statement : Statement, index : StackIndex, variable : Variable)
+
+//  content at the top of the stack -> BASE CASE
+//Stack_Contents(statement,0, variable) :-
+//    Statement_Variable(statement,variable).
+
+//  
+//Stack_Contents()
+
+//Statement_Stack_Delta(statement, n) :-
+
+
+
+
+
+
+//---------------------------------------------------------------------------------------//
+// ** Opcode Setup** //
+
+.decl JUMP_FORWARD(address: Address)
+JUMP_FORWARD(address) :- Statement_Opcode(address, "JUMP_FORWARD").
+
+.decl JUMP_ABSOLUTE(address: Address)
+JUMP_ABSOLUTE(address) :- Statement_Opcode(address, "JUMP_ABSOLUTE").
+
+.decl LOAD_CLOSURE(address: address)
+LOAD_CLOSURE(address) :- Statement_Opcode(address, "LOAD_CLOSURE").
+
+.decl BUILD_TUPLE(address: Address)
+BUILD_TUPLE(address) :- Statement_Opcode(address, "BUILD_TUPLE").
+
+.decl LOAD_FAST(address: Address)
+LOAD_FAST(address) :- Statement_Opcode(address, "LOAD_FAST").
+
+.decl LOAD_CONST(address: Address)
+LOAD_CONST(address) :- Statement_Opcode(address, "LOAD_CONST").
+
+
+//---------------------------------------------------------------------------------------//
+
+// ** Query Methods ** //
+
+.decl all_load_fast(address: Statement, opcode: Opcode)
+all_load_fast(address, opcode) :- 
+    Statement_Opcode(address,LOAD_CONST(address)).
+
+//---------------------------------------------------------------------------------------//
+
+/* 
 // setting up opcodes //
 .decl OpcodeIs_LOAD_CLOSURE(instruction: Opcode)
 OpcodeIs_LOAD_CLOSURE(instruction) :- OpcodeIs_LOAD_CLOSURE(instruction).
@@ -86,9 +562,7 @@ OpcodeIs_LOAD_BUILD_CLASS("LOAD_BUILD_CLASS").
 
 OpcodeIs_LOAD_NAME("LOAD_NAME").
 //---------------------------------------------------------------------------------------//
-// reading the file //
-.decl Statement_Opcode(address: Statement, opcode: Opcode)
-.input Statement_Opcode(IO = "file", filename = "StatementOpcode.facts", delimeter="\t")
+
 
 
 
@@ -96,9 +570,10 @@ OpcodeIs_LOAD_NAME("LOAD_NAME").
 Data(address) :- 
     identifier_address(address).
 .input Data(IO = "file", filename = "StatementOpcode.facts", delimeter="\t")
-
+ */
 //---------------------------------------------------------------------------------------//
 // analysis functions //
+/*
 .decl counter_load_closure(address: Statement, opcode: Opcode)
 counter_load_closure(address, opcode) :- 
             Statement_Opcode(address, opcode),
@@ -233,3 +708,4 @@ counter_load_name(address, opcode) :-
 //.output counter_(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_DEREF.csv", delimeter="\t")
 
 //.output counter(IO = "file", filename = "Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_OPCODE_COUNTER.csv")
+*/

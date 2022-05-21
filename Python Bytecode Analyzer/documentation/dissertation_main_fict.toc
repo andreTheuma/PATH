@@ -1,0 +1,63 @@
+\changetocdepth {2}
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{List of Figures}{vii}{section*.2}%
+\contentsline {chapter}{List of Tables}{viii}{section*.3}%
+\contentsline {chapter}{List of Abbreviations}{ix}{chapter*.4}%
+\contentsline {chapter}{\chapternumberline {1}Introduction}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Motivation}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Preliminary Overview}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Python \& CPython}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Program Analysis}{2}{subsection.1.2.2}%
+\contentsline {section}{\numberline {1.3}Proposed Solution}{2}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}Aims \& Objectives}{3}{subsection.1.3.1}%
+\contentsline {section}{\numberline {1.4}Document Structure}{3}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Contributions}{3}{section.1.5}%
+\contentsline {chapter}{\chapternumberline {2}Background \& Literature Overview}{5}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Python}{5}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}History}{5}{subsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.1.2}Features \& Philosophy}{5}{subsection.2.1.2}%
+\contentsline {subsection}{\numberline {2.1.3}Implementations}{6}{subsection.2.1.3}%
+\contentsline {section}{\numberline {2.2}CPython}{6}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Overview}{6}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Stacks}{8}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}Frames}{12}{subsection.2.2.3}%
+\contentsline {subsection}{\numberline {2.2.4}Code Objects}{13}{subsection.2.2.4}%
+\contentsline {subsection}{\numberline {2.2.5}Execution of Code Objects}{16}{subsection.2.2.5}%
+\contentsline {subsection}{\numberline {2.2.6}Execution of Frame Objects}{18}{subsection.2.2.6}%
+\contentsline {section}{\numberline {2.3}Analysis}{18}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}Control Flow Analysis}{18}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}Dataflow Analysis}{19}{subsection.2.3.2}%
+\contentsline {subsection}{\numberline {2.3.3}Abstract Interpretation}{20}{subsection.2.3.3}%
+\contentsline {subsection}{\numberline {2.3.4}Type and Effect Systems}{22}{subsection.2.3.4}%
+\contentsline {chapter}{\chapternumberline {3}Methodology}{24}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Initial Challenges}{24}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Abstract Design}{24}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Phase Overview}{24}{subsection.3.2.1}%
+\contentsline {section}{\numberline {3.3}Concrete implementation}{25}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Setup}{25}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}\acs {AIL}}{26}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}Block Summary}{27}{subsection.3.3.3}%
+\contentsline {section}{\numberline {3.4}Fact Generation}{27}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Control Flow}{28}{section.3.5}%
+\contentsline {section}{\numberline {3.6}\acs {IR} Generation}{29}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Technical Implementation}{31}{section.3.7}%
+\contentsline {chapter}{\chapternumberline {4}Evaluation}{33}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Experimental Results}{33}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Research Questions}{33}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}How further analyses is facilitated}{34}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}CPython invariants, and findings}{34}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}Scalability of \acs {PATH}}{34}{subsection.4.2.3}%
+\contentsline {section}{\numberline {4.3}Facilitating further analyses}{35}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Relating \acs {PATH} with current frameworks}{35}{subsection.4.3.1}%
+\contentsline {section}{\numberline {4.4}Insights}{36}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Scalability Experiments}{36}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Case Study}{36}{section.4.6}%
+\contentsline {chapter}{\chapternumberline {5}Conclusion}{37}{chapter.5}%
+\contentsline {chapter}{\chapternumberline {6}Conclusions}{38}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Revisiting the Aims and Objectives}{38}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Critique and Limitations}{38}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Future Work}{39}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Final Remarks}{39}{section.6.4}%
+\contentsline {chapter}{References}{40}{chapter*.44}%
+\contentsline {appendix}{\chapternumberline {A}Opcode Table}{43}{appendix.A}%
+\contentsline {appendix}{\chapternumberline {B}Facts Table}{48}{appendix.B}%

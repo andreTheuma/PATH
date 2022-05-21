@@ -1,0 +1,472 @@
+\chapter{Opcode Table}
+
+\begin{longtable}{|p{4cm}|p{4cm}|p{2cm}|p{2cm}|  }
+    \hline
+    \multicolumn{4}{|c|}{{\bfseries Opcode List}} \\
+    \hline
+    Class & Opname & Push Value & Pop Value \\
+    \hline
+
+    \multirow{3}{4cm}{\makecell{GENERAL \\ OPERATIONS}} & NOP & 0 & 0\\
+    
+    \cline{2-4} & 
+    
+    POP\_TOP&0&1 \\
+    
+    \cline{2-4} & 
+    ROT\_TWO&0&0\\
+    
+    \cline{2-4} & 
+    ROT\_THREE&0&0\\
+    
+    \cline{2-4} & 
+    ROT\_FOUR&0&0\\
+
+    \cline{2-4} & 
+    DUP\_TOP&1&0\\
+    
+    \cline{2-4} & 
+    DUP\_TOP\_TWO&2&0\\
+
+    \hline
+    
+    \multirow{3}{4cm}{ \makecell{UNARY \\ OPERATIONS}} & UNARY\_POSITIVE&0&0\\
+    
+    \cline{2-4} & 
+    UNARY\_NEGATIVE&0&0\\
+    
+    \cline{2-4} & 
+    UNARY\_NOT&0&0\\
+    
+    \cline{2-4} & 
+    UNARY\_INVERT&0&0\\
+    
+    \cline{2-4} & 
+    GET\_ITER&0&0\\
+
+    \cline{2-4} & 
+    \makecell{GET\_YILED \\ \_FROM\_ITER}&0&0\\
+    
+    \hline
+
+    \multirow{3}{4cm}{ \makecell{BINARY\\ OPERATIONS}} & BINARY\_POWER&1&2\\
+    
+    \cline{2-4} & 
+    BINARY\_MULTIPLY&1&2\\
+
+    \cline{2-4} & 
+    \makecell{BINARY\_MATRIX \\ \_MULTIPLY}&1&2\\
+    
+    \cline{2-4} & 
+    \makecell{BINARY\_FLOOR \\ \_DIVIDE}&1&2\\
+    
+    \cline{2-4} & 
+    \makecell{BINARY\_TRUE \\ \_DIVIDE}&1&2\\
+
+    \cline{2-4} & 
+    BINARY\_MODULO&1&2\\
+
+    \cline{2-4} & 
+    BINARY\_ADD&1&2\\
+
+    \cline{2-4} & 
+    BINARY\_SUBTRACT&1&2\\
+
+    \cline{2-4} & 
+    BINARY\_SUBSCR&1&2\\
+
+    \cline{2-4} & 
+    BINARY\_LSHIFT&1&2\\
+
+    \cline{2-4} & 
+    BINARY\_RSHIFT&1&2\\
+
+    \cline{2-4} & 
+    BINARY\_AND&1&2\\
+
+    \cline{2-4} & 
+    BINARY\_XOR&1&2\\
+
+    \cline{2-4} & 
+    BINARY\_OR&1&2\\
+
+    \hline
+
+    \multirow{3}{4cm}{ \makecell{INPLACE\\ OPERATIONS}} & INPLACE\_POWER&0&1\\
+    
+    \cline{2-4} & 
+    INPLACE\_MULTIPLY&0&1\\
+    
+    \cline{2-4} & 
+    \makecell{INPLACE\_MATRIX \\ \_MULTIPLY}&0&1\\
+    
+    \cline{2-4} & 
+    \makecell{INPLACE\_FLOOR \\ \_DIVIDE}&0&1\\
+    
+    \cline{2-4} & 
+    \makecell{INPLACE\_TRUE \\ \_DIVIDE}&0&1\\
+
+    \cline{2-4} & 
+    INPLACE\_MODULO&0&1\\
+
+    \cline{2-4} & 
+    INPLACE\_ADD&0&1\\
+    
+    \cline{2-4} & 
+    INPLACE\_ADD&0&1\\
+
+    \cline{2-4} & 
+    INPLACE\_SUBTRACT&0&1\\
+
+    \cline{2-4} & 
+    INPLACE\_LSHIFT&0&1\\
+
+    \cline{2-4} & 
+    INPLACE\_RSHIFT&0&1\\
+
+    \cline{2-4} & 
+    INPLACE\_AND&0&1\\
+
+    \cline{2-4} & 
+    INPLACE\_XOR&0&1\\
+
+    \cline{2-4} & 
+    INPLACE\_OR&0&1\\
+
+    \hline
+
+
+    \multirow{3}{4cm}{ \makecell{COROUTINE \\ OPERATIONS}} & GET\_AWAITABLE&0&3\\
+    
+    \cline{2-4} & 
+    GET\_AITER&0&0\\
+
+    \cline{2-4} & 
+    GET\_ANEXT&1&0\\
+
+    \cline{2-4} & 
+    END\_ASYNC\_FOR&\andre{check}&\andre{check}\\
+
+    \cline{2-4} & 
+    BEFORE\_ASYNC\_WITH&1&0\\
+    
+    \cline{2-4} & 
+    SETUP\_ASYNC\_WITH&\andre{CHECK}&\andre{CHECK}\\
+
+    \hline
+
+    \multirow{3}{4cm}{ \makecell{MISC. \\ OPERATIONS}} & GET\_AWAITABLE&0&1\\
+    
+    \cline{2-4} & 
+
+    PRINT\_EXPR&0&1\\
+    
+    \cline{2-4} & 
+
+    LIST\_APPEND&0&1\\
+
+    \cline{2-4} & 
+
+    MAP\_ADD&0&2\\
+    
+    \cline{2-4} & 
+
+    RETURN\_VALUE&0&1\\
+    
+    \cline{2-4} & 
+
+    YIELD\_VALUE&0&1\\
+    
+    \cline{2-4} & 
+
+    YIELD\_FROM&0&1\\
+    
+    \cline{2-4} &
+
+    YIELD\_FROM&0&0\\
+    
+    \cline{2-4} &
+
+    SETUP\_ANNOTATIONS&0&0\\
+    
+    \cline{2-4} &
+
+    IMPORT\_STAR&0&1\\
+    
+    \cline{2-4} &
+
+    POP\_EXCEPT&0&3\\
+  
+    \cline{2-4} &
+
+    RERAISE&0&0\\
+    
+    \cline{2-4} &
+
+    WITH\_EXCEPT\_START&1&0\\
+    
+    \cline{2-4} &
+
+    \makecell{LOAD ASSERTION \\ ERROR}&1&0\\
+    
+    \cline{2-4} &
+
+    \makecell{LOAD BUILD \\ CLASS}&1&0\\
+    
+    \cline{2-4} &
+
+    GET\_LEN&1&0\\
+    
+    \cline{2-4} &
+
+    MATCH\_MAPPING&1&0\\
+    
+    \cline{2-4} &
+
+    MATCH\_SEQUENCE&1&0\\
+    
+    \cline{2-4} &
+
+    MATCH\_KEYS&1&0\\
+
+    \cline{2-4} & 
+    STORE\_SUBSCR&0&3\\
+    
+    \cline{2-4} & 
+    DELETE\_SUBSCR&0&2\\
+
+    \hline
+
+    \multirow{3}{4cm}{ \makecell{ARGUMENT\\ OPERATIONS}} & STORE\_NAME&0&1\\
+
+    \cline{2-4} & 
+    DELTE\_NAME&0&0\\
+    
+    \cline{2-4} & 
+    UNPACK\_SEQUENCE&{\bfseries ARG}&1\\
+    
+    \cline{2-4} & 
+    UNPACK\_EX&0&1\\
+    
+    \cline{2-4} & 
+    STORE\_ATTR&0&2\\
+    
+    \cline{2-4} & 
+    DELETE\_ATTR&0&1\\
+    
+    \cline{2-4} & 
+    STORE\_GLOBAL&0&1\\
+    
+    \cline{2-4} & 
+    DELETE\_GLOBAL&0&0\\
+    
+    \cline{2-4} & 
+    LOAD\_CONST&1&0\\
+    
+    \cline{2-4} & 
+    LOAD\_NAME&1&0\\
+    
+    \cline{2-4} & 
+    BUILD\_TUPLE&1&{\bfseries ARG}\\
+    
+    \cline{2-4} & 
+    BUILD\_LIST&1&{\bfseries ARG}\\
+    
+    \cline{2-4} & 
+    BUILD\_SET&1&{\bfseries ARG}\\
+    
+    \cline{2-4} & 
+    BUILD\_MAP&1&{\bfseries ARG}\\
+    
+    \cline{2-4} & 
+    \makecell{BUILD\_CONST\\ \_KEY\_MAP}&1&{\bfseries ARG}\\
+
+    \cline{2-4} & 
+    BUILD\_STRING&1&{\bfseries ARG}\\
+ 
+    \cline{2-4} & 
+    LIST\_TO\_TUPLE&1&1\\
+    
+    \cline{2-4} & 
+    LIST\_EXTEND&0&1\\
+    
+    \cline{2-4} & 
+    SET\_UPDATE&0&1\\
+    
+    \cline{2-4} & 
+    DICT\_MERGE&0&1\\
+    
+    \cline{2-4} & 
+    LOAD\_ATTR&0&0\\
+    
+    \cline{2-4} & 
+    COMPARE\_OP&0&1\\
+    
+    \cline{2-4} & 
+    IS\_OP&0&1\\
+    
+    \cline{2-4} & 
+    CONTAINS\_OP&0&2\\
+    
+    \cline{2-4} & 
+    IMPORT\_NAME&0&1\\
+    
+    \cline{2-4} & 
+    IMPORT\_FROM&0&1\\
+
+    \cline{2-4} & 
+    JUMP\_FORWARD&0&1\\
+    
+    \cline{2-4} & 
+    \makecell{POP\_JUMP\_ \\ IF\_TRUE}&0&1\\
+    
+    \cline{2-4} & 
+    \makecell{POP\_JUMP\_ \\ IF\_FALSE}&0&1\\
+    
+    \cline{2-4} & 
+    \makecell{JUMP\_IF\_ \\ NOT\_EXC\_MATCH}&0&1\\
+  
+    \cline{2-4} & 
+    \makecell{JUMP\_IF\_ \\ TRUE\_OR\_POP}&0&{\bfseries ARG}\\
+    
+    \cline{2-4} & 
+    \makecell{JUMP\_IF\_ \\ FALSE\_OR\_POP}&0&{\bfseries ARG}\\
+
+    \cline{2-4} & 
+    JUMP\_ABSOLUTE&0&0\\
+    
+    \cline{2-4} & 
+    FOR\_ITER&0&\andre{CHECK}\\
+    
+    \cline{2-4} & 
+    LOAD\_GLOBAL&1&0\\
+    
+    \cline{2-4} & 
+    LOAD\_FAST&1&0\\
+    
+    \cline{2-4} & 
+    STORE\_FAST&0&1\\
+    
+    \cline{2-4} & 
+    DELETE\_FAST&0&0\\
+    
+    \cline{2-4} & 
+    LOAD\_CLOSURE&1&0\\
+    
+    \cline{2-4} & 
+    LOAD\_DEREF&1&0\\
+    
+    \cline{2-4} & 
+    LOAD\_CLASSDEREF&1&0\\
+    
+    \cline{2-4} & 
+    STORE\_DEREF&0&1\\
+    
+    \cline{2-4} & 
+    DELETE\_DEREF&1&0\\
+
+    \cline{2-4} & 
+    RAISE\_VARARGS&0&{\bfseries ARG}\\
+
+    \cline{2-4} & 
+    CALL\_FUNCTION&1&{\bfseries ARG}\\
+    
+    \cline{2-4} & 
+    CALL\_FUNCTION\_KW&0&1\\
+    
+    \cline{2-4} & 
+    CALL\_FUNCTION\_EX&0&1\\
+    
+    \cline{2-4} & 
+    LOAD\_METHOD&2&1\\
+
+    \cline{2-4} & 
+    CALL\_METHOD&1&{\bfseries ARG}\\
+    
+    \cline{2-4} & 
+    MAKE\_FUNCTION&1&\andre{check}\\
+    
+    \cline{2-4} & 
+    BUILD\_SLICE&0&{\bfseries ARG}\\
+    
+    \cline{2-4} & 
+    EXTENDED\_ARG&0&0\\
+    
+    \cline{2-4} & 
+    FORMAT\_VALUE&1&\andre{check}\\
+    
+    \cline{2-4} & 
+    MATCH\_CLASS&0&2\\
+    
+    \cline{2-4} & 
+    GEN\_START&0&1\\
+    
+    \cline{2-4} & 
+    ROT\_N&0&0\\
+
+    \hline
+
+
+\end{longtable}\label{table:opcode_table}
+
+\chapter{Facts Table}
+
+    \renewcommand{\arraystretch}{1.5}
+    \setlength\doublerulesep{1.3pt}
+
+    \begin{longtable}{|p{4.8cm}|p{7.2cm}|  }
+
+    \hline
+    \multicolumn{2}{|c|}{{\bfseries Facts List}} \\
+    \hline
+    \textit{.facts} file & Description \\
+    \hhline{|==|}
+    
+    \textit{BlockInputContents.facts}&\parbox{7.2cm}{(Block\_ID: \lstinline|int|, Input\_Active\_Statment\_ID: \lstinline|int|)}\\
+    \hline
+    \textit{BlockOutputContents.facts}&\parbox{7.2cm}{(Block\_ID: \lstinline|int|, Output\_Active\_Statement\_ID: \lstinline|int|)}\\
+    \hline
+    \textit{BlockSummary.facts}&\parbox{7.2cm}{Block\_ID: \lstinline|int|, Start\_Statement\_ID: \lstinline|int|, End\_Statement\_ID: \lstinline|int|, Start\_Instruction\_Offset: \lstinline|int|, End\_Instruction\_Offset: \lstinline|int|}\\
+    \hline
+    \textit{BlockToBlock.facts}&\parbox{7.2cm}{(Block\_ID: \lstinline|int|, Next\_Block\_ID: \lstinline|int|)}\\
+    \hline
+    \textit{BlockType.facts}&\parbox{7.2cm}{(Block\_ID: \lstinline|int|, Block\_Type: \lstinline|int|, Block\_Link\_ID: \lstinline|int|)}\\
+    \hline
+    \textit{PushValue.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Value: \lstinline|value|)]}\\
+    \hline
+    \textit{SimpleIR.facts}&\parbox{7.2cm}{See \nameref{sec:irgen}}\\
+    \hline
+    \textit{StatementBlock.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Block\_ID: \lstinline|int|)]}\\
+    \hline
+    \textit{StatementBlockHead.facts}&\parbox{7.2cm}{(Statement\_ID: \lstinline|int|, Block\_ID: \lstinline|int|)}\\
+    \hline
+    \textit{StatementBlockStackSize.facts}&\parbox{7.2cm}{(Statement\_ID: \lstinline|int|, Stack\_Size: \lstinline|int|)}\\
+    \hline
+    \textit{StatementBlockTail.facts}&\parbox{7.2cm}{(Statement\_ID: \lstinline|int|, Block\_ID: \lstinline|int|)}\\
+    \hline
+    \textit{StatementCode.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, CodeObject: \lstinline|code|)]}\\
+    \hline
+    \textit{StatementDefinesLocal.facts}&\parbox{7.2cm}{}\\
+    \hline
+    \textit{StatementDetails.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Block\_ID: \lstinline|int|, Push\_Value: \lstinline|value|), Opname: \lstinline|String|, Line\_ID: \lstinline|float|)]}\\
+    \hline
+    \textit{StatementMetadata.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Line\_ID: \lstinline|float|)]}\\
+    \hline
+    \textit{StatementNext.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Next\_ID: \lstinline|int|)]}\\
+    \hline
+    \textit{StatementOpcode.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Opname: \lstinline|String|)]}\\
+    \hline 
+    \textit{StatementPopDelta.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Pop\_Delta: \lstinline|int|)]}\\
+    \hline 
+    \textit{StatementPops.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Pop\_No: \lstinline|int|)]}\\
+    \hline 
+    \textit{StatementPushes.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Push\_No: \lstinline|int|)]}\\
+    \hline 
+    \textit{StatementUsesLocal.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Used\_Statement\_ID: \lstinline|int|)]}\\
+    \hline 
+    \textit{TotalStatementPopDelta.facts}&\parbox{7.2cm}{(Statement\_ID: \lstinline|int|, Running\_Pop\_Count: \lstinline|int|)}\\
+    \hline
+
+\end{longtable}\label{table:facts_table}
+
+

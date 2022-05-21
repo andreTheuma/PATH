@@ -22,11 +22,13 @@ class sorting_handler:
             relations (set[(_,_)]) : List of all the sets; Push_Values,Pop_Values,...
 
         Returns:
-            set(Identifier, <linenumber>.<offset>): Statement_metadata in order
+            set(Identifier, <linxenumber>.<offset>): Statement_metadata in order
         """
         sorted_statement_ids = sorted(relations['Statement_Metadata'], key=self.take_second_key)
         return sorted_statement_ids
 
+    #TODO: Change implementation to use one function
+    '''
     def sort_push_values(self,relations):
         """Function which sorts the push value set in the order it is disassmbled
 
@@ -230,3 +232,150 @@ class sorting_handler:
                 sorted_statement_ids.append((id_value,dict_blocks[id_value]))
 
         return sorted_statement_ids
+   
+    def sort_stmt_stack_delta(self, relations):
+        
+        sorted_statement_ids = list()
+        statement_metadata = self.sort_metadata(relations)
+
+        dict_metadata = dict(statement_metadata)
+        dict_stack_sizes = dict(relations['Statement_Stack_Delta'])
+
+        ordered_ids = list()
+        unordered_ids = list()
+
+        #storing the ordered IDs so as to sort the unordered IDs
+        for tuple in statement_metadata:
+            ordered_ids.append(tuple[0])
+
+        for tuple in relations['Statement_Stack_Delta']:
+            unordered_ids.append(tuple[0])
+
+        for ordered_tuple in statement_metadata:
+            line_value = ordered_tuple[1]
+            id_value = ordered_tuple[0]
+
+            # if key exists obtain value
+            if id_value in unordered_ids:
+        
+                sorted_statement_ids.append((id_value,dict_stack_sizes[id_value]))
+
+        return sorted_statement_ids
+    
+    def sort_stmt_block_stack_delta(self, relations):
+        
+        sorted_statement_ids = list()
+        statement_metadata = self.sort_metadata(relations)
+
+        dict_metadata = dict(statement_metadata)
+        dict_stack_sizes = dict(relations['Statement_Block_Stack_Delta'])
+
+        ordered_ids = list()
+        unordered_ids = list()
+
+        #storing the ordered IDs so as to sort the unordered IDs
+        for tuple in statement_metadata:
+            ordered_ids.append(tuple[0])
+
+        for tuple in relations['Statement_Block_Stack_Delta']:
+            unordered_ids.append(tuple[0])
+
+        for ordered_tuple in statement_metadata:
+            line_value = ordered_tuple[1]
+            id_value = ordered_tuple[0]
+
+            # if key exists obtain value
+            if id_value in unordered_ids:
+        
+                sorted_statement_ids.append((id_value,dict_stack_sizes[id_value]))
+
+        return sorted_statement_ids
+    
+    def sort_stmt_pop_delta(self, relations):
+        
+        sorted_statement_ids = list()
+        statement_metadata = self.sort_metadata(relations)
+
+        dict_metadata = dict(statement_metadata)
+        dict_pops = dict(relations['Statement_Pop_Delta'])
+
+        ordered_ids = list()
+        unordered_ids = list()
+
+        #storing the ordered IDs so as to sort the unordered IDs
+        for tuple in statement_metadata:
+            ordered_ids.append(tuple[0])
+
+        for tuple in relations['Statement_Pop_Delta']:
+            unordered_ids.append(tuple[0])
+
+        for ordered_tuple in statement_metadata:
+            line_value = ordered_tuple[1]
+            id_value = ordered_tuple[0]
+
+            # if key exists obtain value
+            if id_value in unordered_ids:
+        
+                sorted_statement_ids.append((id_value,dict_pops[id_value]))
+
+        return sorted_statement_ids
+    
+    def sort_stmt_uses_local(self, relations):
+        
+        sorted_statement_ids = list()
+        statement_metadata = self.sort_metadata(relations)
+
+        dict_metadata = dict(statement_metadata)
+        dict_pops = dict(relations['Statement_Uses_Local'])
+
+        ordered_ids = list()
+        unordered_ids = list()
+
+        #storing the ordered IDs so as to sort the unordered IDs
+        for tuple in statement_metadata:
+            ordered_ids.append(tuple[0])
+
+        for tuple in relations['Statement_Uses_Local']:
+            unordered_ids.append(tuple[0])
+
+        for ordered_tuple in statement_metadata:
+            line_value = ordered_tuple[1]
+            id_value = ordered_tuple[0]
+
+            # if key exists obtain value
+            if id_value in unordered_ids:
+        
+                sorted_statement_ids.append((id_value,dict_pops[id_value]))
+
+        return sorted_statement_ids
+'''
+    def general_stmt_sorter(self,relations,relation):
+        
+        sorted_statement_ids = list()
+        statement_metadata = self.sort_metadata(relations)
+
+        dict_metadata = dict(statement_metadata)
+        dict_relation = dict(relations[relation])
+
+        ordered_ids = list()
+        unordered_ids = list()
+
+        #storing the ordered IDs so as to sort the unordered IDs
+        for tuple in statement_metadata:
+            ordered_ids.append(tuple[0])
+
+        for tuple in relations[relation]:
+            unordered_ids.append(tuple[0])
+
+        for ordered_tuple in statement_metadata:
+            line_value = ordered_tuple[1]
+            id_value = ordered_tuple[0]
+
+            # if key exists obtain value
+            if id_value in unordered_ids:
+        
+                sorted_statement_ids.append((id_value,dict_relation[id_value]))
+
+        return sorted_statement_ids
+    
+    

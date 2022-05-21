@@ -1,37 +1,19 @@
-<md5 _hashlib.HASH object @ 0x106c55e90>, LOAD_CLOSURE
-<md5 _hashlib.HASH object @ 0x106c55eb0>, BUILD_TUPLE
-<md5 _hashlib.HASH object @ 0x106c55f30>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c55f50>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c55fd0>, MAKE_FUNCTION
-<md5 _hashlib.HASH object @ 0x106c55ff0>, STORE_FAST
-<md5 _hashlib.HASH object @ 0x106c56170>, LOAD_BUILD_CLASS
-<md5 _hashlib.HASH object @ 0x106c561b0>, LOAD_CLOSURE
-<md5 _hashlib.HASH object @ 0x106c561f0>, BUILD_TUPLE
-<md5 _hashlib.HASH object @ 0x106c56230>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c56270>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c562b0>, MAKE_FUNCTION
-<md5 _hashlib.HASH object @ 0x106c562f0>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c566b0>, CALL_FUNCTION
-<md5 _hashlib.HASH object @ 0x106c566f0>, STORE_FAST
-<md5 _hashlib.HASH object @ 0x106c56730>, LOAD_FAST
-<md5 _hashlib.HASH object @ 0x106c56770>, RETURN_VALUE
-<md5 _hashlib.HASH object @ 0x106c56010>, LOAD_DEREF
-<md5 _hashlib.HASH object @ 0x106c56030>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c56050>, INPLACE_ADD
-<md5 _hashlib.HASH object @ 0x106c56090>, STORE_DEREF
-<md5 _hashlib.HASH object @ 0x106c560d0>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c56110>, RETURN_VALUE
-<md5 _hashlib.HASH object @ 0x106c56310>, LOAD_NAME
-<md5 _hashlib.HASH object @ 0x106c56350>, STORE_NAME
-<md5 _hashlib.HASH object @ 0x106c56390>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c563d0>, STORE_NAME
-<md5 _hashlib.HASH object @ 0x106c56410>, LOAD_CLOSURE
-<md5 _hashlib.HASH object @ 0x106c56450>, BUILD_TUPLE
-<md5 _hashlib.HASH object @ 0x106c56490>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c564d0>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c56510>, MAKE_FUNCTION
-<md5 _hashlib.HASH object @ 0x106c56550>, STORE_NAME
-<md5 _hashlib.HASH object @ 0x106c56610>, LOAD_CONST
-<md5 _hashlib.HASH object @ 0x106c56650>, RETURN_VALUE
-<md5 _hashlib.HASH object @ 0x106c56570>, LOAD_DEREF
-<md5 _hashlib.HASH object @ 0x106c565b0>, RETURN_VALUE
+986e31d5e0a20a8025e615c39dd6e5e3	LOAD_FAST
+bf3bce5667fc27d752b14cc1f1304a6e	LOAD_CONST
+444095900d76df968ea4281d67eadebb	COMPARE_OP
+69887c03f40bfaf53c12bf970172b65e	POP_JUMP_IF_FALSE
+cf34e286a350a02e2eace33c5199847f	LOAD_FAST
+dcf0e2cf5f3b5b3f6b4f7137a17049af	LOAD_CONST
+bda6573167da55b27579f3029c5e355f	INPLACE_ADD
+48afe8c740e0d16414665758ea32d416	STORE_FAST
+524511dc84ecdd19b21476433d3ddc5c	JUMP_FORWARD
+f478ca8e37d203cf1a577f0e81a20d0c	LOAD_FAST
+0f57cfb583b7d8331be853e324697911	STORE_FAST
+e889ed7552fabd5dc8f2d03e9ad217b2	LOAD_CONST
+75924fd648476d2cbbb582f41a26ff2c	RETURN_VALUE
+564810b44d5590874526ffb42b14c9e3	LOAD_FAST
+82464bac8b9020fa4e61f700bf7008f3	LOAD_FAST
+c85d6ed2f6767480205251b1fd8cf9ec	BINARY_ADD
+5fddabf25b4acd9d644e17bdea440e0f	STORE_FAST
+984c282646fbb54863cdd53a39f035d2	LOAD_FAST
+e681d6784c45e2b6bfae2100cb26d253	RETURN_VALUE

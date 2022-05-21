@@ -1,0 +1,7 @@
+{"rule":"EN_GB_SIMPLE_REPLACE","sentence":"^\\QPython also includes a cycle-detecting garbage collector \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q, freeing up objects as soon as they become unreachable \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QThis API constructs an execution frame from the top of the stack by calling PyEvalEvalCodeWithName() Unnamed.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QThe evaluation stage firstly makes use of ceval footnote the public API PyEvalEvalCode() \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q which is used for evaluating a code object created at the end of the compilation stages (Figure \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q).\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QThe resolution *argsfootnote:kwargs_args and **kwargs in function definitions.\\E$"}
+{"rule":"DIS","sentence":"^\\QWhen applying the analysis function |dis.dis|, the disassembled code object takes the following format: \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q (ADD section) It is interesting to note that the value for |opargs| is computed in little-endian order.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Q|_PyEval_EvalFrameDefault()| is the central function which is found in the main execution loop.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Q|globals|: A dictionary relating global variable names with their values.\\E$"}

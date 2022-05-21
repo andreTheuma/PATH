@@ -1,37 +1,19 @@
-<md5 _hashlib.HASH object @ 0x106c55e90>, 5.0
-<md5 _hashlib.HASH object @ 0x106c55eb0>, 5.02
-<md5 _hashlib.HASH object @ 0x106c55f30>, 5.04
-<md5 _hashlib.HASH object @ 0x106c55f50>, 5.06
-<md5 _hashlib.HASH object @ 0x106c55fd0>, 5.08
-<md5 _hashlib.HASH object @ 0x106c55ff0>, 5.1
-<md5 _hashlib.HASH object @ 0x106c56170>, 5.12
-<md5 _hashlib.HASH object @ 0x106c561b0>, 5.14
-<md5 _hashlib.HASH object @ 0x106c561f0>, 5.16
-<md5 _hashlib.HASH object @ 0x106c56230>, 5.18
-<md5 _hashlib.HASH object @ 0x106c56270>, 5.2
-<md5 _hashlib.HASH object @ 0x106c562b0>, 5.22
-<md5 _hashlib.HASH object @ 0x106c562f0>, 5.24
-<md5 _hashlib.HASH object @ 0x106c566b0>, 5.26
-<md5 _hashlib.HASH object @ 0x106c566f0>, 5.28
-<md5 _hashlib.HASH object @ 0x106c56730>, 5.3
-<md5 _hashlib.HASH object @ 0x106c56770>, 5.32
-<md5 _hashlib.HASH object @ 0x106c56010>, 9.0
-<md5 _hashlib.HASH object @ 0x106c56030>, 9.02
-<md5 _hashlib.HASH object @ 0x106c56050>, 9.04
-<md5 _hashlib.HASH object @ 0x106c56090>, 9.06
-<md5 _hashlib.HASH object @ 0x106c560d0>, 9.08
-<md5 _hashlib.HASH object @ 0x106c56110>, 9.1
-<md5 _hashlib.HASH object @ 0x106c56310>, 12.0
-<md5 _hashlib.HASH object @ 0x106c56350>, 12.02
-<md5 _hashlib.HASH object @ 0x106c56390>, 12.04
-<md5 _hashlib.HASH object @ 0x106c563d0>, 12.06
-<md5 _hashlib.HASH object @ 0x106c56410>, 12.08
-<md5 _hashlib.HASH object @ 0x106c56450>, 12.1
-<md5 _hashlib.HASH object @ 0x106c56490>, 12.12
-<md5 _hashlib.HASH object @ 0x106c564d0>, 12.14
-<md5 _hashlib.HASH object @ 0x106c56510>, 12.16
-<md5 _hashlib.HASH object @ 0x106c56550>, 12.18
-<md5 _hashlib.HASH object @ 0x106c56610>, 12.2
-<md5 _hashlib.HASH object @ 0x106c56650>, 12.22
-<md5 _hashlib.HASH object @ 0x106c56570>, 13.0
-<md5 _hashlib.HASH object @ 0x106c565b0>, 13.02
+986e31d5e0a20a8025e615c39dd6e5e3	6.0
+bf3bce5667fc27d752b14cc1f1304a6e	6.054054054054054
+444095900d76df968ea4281d67eadebb	6.108108108108108
+69887c03f40bfaf53c12bf970172b65e	6.162162162162162
+cf34e286a350a02e2eace33c5199847f	7.216216216216216
+dcf0e2cf5f3b5b3f6b4f7137a17049af	7.27027027027027
+bda6573167da55b27579f3029c5e355f	7.324324324324325
+48afe8c740e0d16414665758ea32d416	7.378378378378378
+524511dc84ecdd19b21476433d3ddc5c	7.4324324324324325
+f478ca8e37d203cf1a577f0e81a20d0c	9.486486486486486
+0f57cfb583b7d8331be853e324697911	9.54054054054054
+e889ed7552fabd5dc8f2d03e9ad217b2	10.594594594594595
+75924fd648476d2cbbb582f41a26ff2c	10.64864864864865
+564810b44d5590874526ffb42b14c9e3	11.702702702702704
+82464bac8b9020fa4e61f700bf7008f3	11.756756756756756
+c85d6ed2f6767480205251b1fd8cf9ec	11.81081081081081
+5fddabf25b4acd9d644e17bdea440e0f	11.864864864864865
+984c282646fbb54863cdd53a39f035d2	12.91891891891892
+e681d6784c45e2b6bfae2100cb26d253	12.972972972972974

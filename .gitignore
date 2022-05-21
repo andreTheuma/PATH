@@ -136,3 +136,51 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+Python Bytecode Analyzer/documentation/Progress Report.toc
+CPython internals - Example Python data types - Lecture 5.mp4
+.gitignore
+CPython internals - Code objects, function objects, and closures - Lecture 6.mp4
+CPython internals - Frames, function calls, and scope - Lecture 3.mp4
+CPython internals - Iterators - Lecture 7.mp4
+CPython internals - Lecture 1.mp4
+CPython internals - Opcodes and main interpreter loop - Lecture 2.mp4
+CPython internals - PyObject - The core Python object - Lecture 4.mp4
+CPython internals - User-defined classes and objects - Lecture 8.mp4
+Python Bytecode Analyzer/.DS_Store
+Python Bytecode Analyzer/documentation/.DS_Store
+.DS_Store
+Python Bytecode Analyzer/documentation/Progress Report Feedback
+Python Bytecode Analyzer/documentation/Progress Report.aux
+Python Bytecode Analyzer/documentation/Progress Report.bbl
+Python Bytecode Analyzer/documentation/Progress Report.blg
+Python Bytecode Analyzer/documentation/Progress Report.fdb_latexmk
+Python Bytecode Analyzer/documentation/Progress Report.fls
+Python Bytecode Analyzer/resources/PushValue.facts
+Python Bytecode Analyzer/resources/StatementCode.facts
+Python Bytecode Analyzer/resources/StatementMetadata.facts
+Python Bytecode Analyzer/resources/StatementOpcode.facts
+Python Bytecode Analyzer/resources/StatementPops.facts
+Python Bytecode Analyzer/resources/StatementPushes.facts
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_BINARY_ADD.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_BUILD_TUPLE.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_CALL_FUNCTION.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_INPLACE_ADD.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_BUILD_CLASS.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_CLOSURE.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_CONST.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_DEREF.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_FAST.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_LOAD_NAME.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_MAKE_FUNCTION.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_RETURN_VALUE.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_DEREF.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_FAST.csv
+Python Bytecode Analyzer/analysis/OPCODE_ANALYSIS_STORE_NAME.csv
+Python Bytecode Analyzer/analysis/OPCODE_RETURN_ADDRESSES.csv
+.gitignore
+Python Bytecode Analyzer/resources/PushValue.facts
+Python Bytecode Analyzer/resources/StatementCode.facts
+.gitignore
+Python Bytecode Analyzer/resources/StatementOpcode.facts
+.gitignore
+Python Bytecode Analyzer/resources/StatementPushes.facts
