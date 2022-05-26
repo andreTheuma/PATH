@@ -1,5 +1,7 @@
 \chapter{Opcode Table}
 
+\small
+
 \begin{longtable}{|p{4cm}|p{4cm}|p{2cm}|p{2cm}|  }
     \hline
     \multicolumn{4}{|c|}{{\bfseries Opcode List}} \\
@@ -336,7 +338,7 @@
     JUMP\_ABSOLUTE&0&0\\
     
     \cline{2-4} & 
-    FOR\_ITER&0&\andre{CHECK}\\
+    FOR\_ITER&1&0\\
     
     \cline{2-4} & 
     LOAD\_GLOBAL&1&0\\
@@ -384,7 +386,7 @@
     CALL\_METHOD&1&{\bfseries ARG}\\
     
     \cline{2-4} & 
-    MAKE\_FUNCTION&1&\andre{check}\\
+    MAKE\_FUNCTION&1&{\bfseries ARG}\\
     
     \cline{2-4} & 
     BUILD\_SLICE&0&{\bfseries ARG}\\
@@ -393,7 +395,7 @@
     EXTENDED\_ARG&0&0\\
     
     \cline{2-4} & 
-    FORMAT\_VALUE&1&\andre{check}\\
+    FORMAT\_VALUE&1&{\bfseries ARG}\\
     
     \cline{2-4} & 
     MATCH\_CLASS&0&2\\
@@ -409,12 +411,12 @@
 
 \end{longtable}\label{table:opcode_table}
 \pagebreak
-\andre(add missing facts)
+
 \chapter{Facts Table}
 
     \renewcommand{\arraystretch}{1.5}
     \setlength\doublerulesep{1.3pt}
-
+    \small
     \begin{longtable}{|p{4.8cm}|p{7.2cm}|  }
 
     \hline
@@ -447,8 +449,6 @@
     \hline
     \textit{StatementCode.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, CodeObject: \lstinline|code|)]}\\
     \hline
-    \textit{StatementDefinesLocal.facts}&\parbox{7.2cm}{}\\
-    \hline
     \textit{StatementDetails.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Block\_ID: \lstinline|int|, Push\_Value: \lstinline|value|), Opname: \lstinline|String|, Line\_ID: \lstinline|float|)]}\\
     \hline
     \textit{StatementMetadata.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Line\_ID: \lstinline|float|)]}\\
@@ -466,6 +466,8 @@
     \textit{StatementUsesLocal.facts}&\parbox{7.2cm}{SET[(Statement\_ID: \lstinline|int|, Used\_Statement\_ID: \lstinline|int|)]}\\
     \hline 
     \textit{TotalStatementPopDelta.facts}&\parbox{7.2cm}{(Statement\_ID: \lstinline|int|, Running\_Pop\_Count: \lstinline|int|)}\\
+    \hline
+    \textit{FunctionsNotAnalysed.facts}&\parbox{7.2cm}{(Filepath: \lstinline|String|, Function\_Not\_Analysed: \lstinline|String|)}\\
     \hline
 
 \end{longtable}\label{table:facts_table}
