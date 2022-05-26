@@ -1,2 +1,7 @@
-\chapter{Conclusion}
-
+\chapter{Conclusion \& Future Work}
+\par In the first section, the importance of Program Analysis was outlined, along with the lack of Program Analysis frameworks. This project aimed to create a framework that simplifies the engineering complexity of 
+further analyses by creating an \acs{IR} and automating processes, such as fact generation and control flow analysis.
+\par Developed using the Python programming language, \acs{PATH} is an accurate fact generating tool that produces an intuitive \acs{IR} and is also able to conduct Control Flow Analysis. The framework created operates with linear time complexity due to its iterative design.
+Thus, providing users with an advantage compared to other polynomial-time frameworks, such as Andersen's Points-To analysis. \acs{PATH} also covers over 90\% of the CPython bytecodes, proving to be versatile.
+\par Further work on the \acs{IR} is possible, such as implementing more instructions. The implementation of other types of analyses, such as Data Flow analysis would also be a non-trivial task to implement as the backbone (creation of the \acs{CFG}) is already implemented.
+Implementing these features would make the framework more versatile, possibly contending with currently available Program Analysis Tools.

@@ -12,7 +12,6 @@
 #  Time Complexity of Solution:
 #  Best Case O(n); Average Case O(n); Worst Case O(n)
 
-from P26_InsertionSort import insertionSort
 import math
 
 DEFAULT_BUCKET_SIZE = 5
@@ -49,6 +48,18 @@ def bucketSort(myList, bucketSize=DEFAULT_BUCKET_SIZE):
             sortedArray.append(buckets[i][j])
 
     return sortedArray
+
+def insertionSort(List):
+    for i in range(1, len(List)):
+        currentNumber = List[i]
+        for j in range(i - 1, -1, -1):
+            if List[j] > currentNumber :
+                List[j], List[j + 1] = List[j + 1], List[j]
+            else:
+                List[j + 1] = currentNumber
+                break
+
+    return List
 
 if __name__ == '__main__':
     sortedArray = bucketSort([12, 23, 4, 5, 3, 2, 12, 81, 56, 95])

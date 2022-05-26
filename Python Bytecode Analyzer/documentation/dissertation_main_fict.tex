@@ -33,7 +33,7 @@
     %% Do not add your packages to the template, but rather add them here.
 
     \usepackage{blindtext} %% for some dummy text, remove in your writeup
-
+    \usepackage{float}
     %% for footnote refs
     \usepackage{footmisc}
     \interfootnotelinepenalty=10000
@@ -43,6 +43,7 @@
     \lstset{
         basicstyle = \ttfamily,
         breaklines = true,
+        escapeinside={!*}{*!}
     }
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,8 +65,8 @@
     \usepackage{tkz-euclide}
     \usetikzlibrary{shapes,arrows,positioning}
     \usepackage{pgfplots}
-    %\usetkzobj{}
-    %\usetkzobj{all}
+    \usepackage{pgfplotstable}
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %% for interactive URLS
@@ -78,8 +79,6 @@
 
     %% For annotations in listings
     \usepackage{codeanatomy}
-
-
 
 %% ***************** (Your) Packages (End) *******************
 
@@ -146,7 +145,7 @@
     \input{chap3/materials_and_methods_main}
     \input{chap4/results_and_discussion_main}
     \input{chap5/evaluation_main}
-    \input{chap6/conclusions_main}
+    %\input{chap6/conclusions_main}
 
 %%\pagestyle{umpageback}
 {%backmatter % comment this out otherwise are not numbered
@@ -162,7 +161,7 @@
 
 \appendix
 	\input{appA/appendix_a_main}     % these are just test names as I didn't know what you'd want
-	%\input{appB/appendix_b_main}    
+	\input{appB/appendix_b_main}    
 	%\input{appC/appendix_c_main} 
 
 

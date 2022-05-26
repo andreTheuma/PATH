@@ -2,7 +2,8 @@
     \par This chapter describes how the \nameref{sec:propsol} was implemented, and why certain decisions were taken regarding design implementation. This chapter also explores the problems encountered whilst formulating such a design.
     %%TODO: finish section
     \section{Initial Challenges}
-
+    \par The effects that CPython Bytecodes have on the CPython stack are not explicitly defined; posing as an initial challenge. CPython also implements certain bytecode optimizations, initially hindering the ability to fully understand
+    the operations taking place in relation to the source code. Official Python documentation is very vague, intertwining terminologies making it difficult to understand the inner workings of the \acs{PVM}.
     \section{Abstract Design}
     \par PATH is a three-phase bytecode inspection tool (Sections \ref{subsec:phaseoverview} \& \ref{sec:concimp} respectively). The high-level implementation is as follows; 
     PATH iteratively inspects each bytecode instruction produced by the Python Compiler, generating facts as instructions are iterated through. 
@@ -68,7 +69,7 @@
         \par An abundant amount of the framework's logic is packed into the \acs{AIL}. This loop iterates through every bytecode instruction, recording attributes of the instruction, and how 
         each instruction interacts with the previous instruction, and will interact with the next instruction. The iterative nature (known as \acs{III}) of the \acs{AIL} was inspired by the Python VM Innards workings (See Figure \ref{fig:vm_innards}). Inspecting the bytecodes in such a fashion (i.e. generating all the facts iteratively) is arguably faster than having 
         a phase per fact needed to be generated. In addition to fact generation, we also incorporated \acs{CFA} and \acs{IR} generation in the \acs{III} fashion; taking a different approach to how current inspection tools operate (such as Pylint), whereby first the \acs{IR} is generated, following an analysis conducted on the \acs{IR} itself. This is a multiphase process, in comparison to the single phase 
-        design created by \acs{AIL}. The \acs{AIL} is visualised in Figure \ref{fig:ailinnards}.
+        design created by \acs{AIL}.
             \subsubsection*{Bytecode Validity}
             Firstly, bytecode instruction validity is ensured via the specified opcode dictionary (supported Bytecode Instructions can be found in \nameref{table:opcode_table}).
             \subsubsection*{Local Variable Initialization}
@@ -80,35 +81,13 @@
             has its own stack and unique properties (see Section \ref{sec:cfimp}) that are used as a basis for both fact generation and accurate block analysis.
             \par An interesting design feature of \acs{AIL} is the incorporation of both Block Handling and Control Flow Analysis in one sub-phase. Moreover, this sub-phase is only executed if an instruction forms part of a new block; avoiding redundant execution stages.  
             \subsubsection*{Opcode Handling}
-            \par The penultimate stage handles general opcode tasks (i.e: general relation generation) and opcode specific tasks (i.e: recursive \lstinline|MAKE_FUNCTION| dictionary nesting). There exist opcodes, such as \lstinline|MAKE_FUNCTION| which require additional parameters to be considered for accurate fact generation. The incorporation of the opcode specific \acs{IR} generation in this stage, expedites the process of fact and IR generation, compared to 
+            \par This stage handles general opcode tasks (i.e: general relation generation) and opcode specific tasks (i.e: recursive \lstinline|MAKE_FUNCTION| dictionary nesting). There exist opcodes, such as \lstinline|MAKE_FUNCTION| which require additional parameters to be considered for accurate fact generation. The incorporation of the opcode specific \acs{IR} generation in this stage, expedites the process of fact and IR generation, compared to 
             having the \acs{IR} generated in a separate stage.
+            \subsubsection*{\acs{IR} Handling}
+            \par The penultimate process is the \acs{IR} Generation stage. This stage handles the \acs{IR} generation according to the current opcode. \acs{IR} generation is further delved into in Section \ref{sec:irgen}.
             \subsubsection*{Updating Global Variables}
             \par The final stage in the \acs{AIL} simply updates the global variables that are to be used in the next iteration.
 
-        %TODO: Add diagram of AIL
-        
-        \begin{figure}
-            \centering
-            \begin{tikzpicture}
-                [
-                    roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
-                    rectanglenode/.style={rectangle, draw=cyan!60, fill=cyan!20, very thick, minimum width=30mm, minimum height = 10mm},
-                    transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},    
-                    startstop/.style={rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!30},
-                    process/.style= {rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=orange!30},
-                    decision/.style = {diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30},
-                    io/.style = {trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30}
-                ]
-
-                %\node
-
-
-
-            \end{tikzpicture} 
-            \caption{\acs{AIL} Innards}
-            \label{fig:ailinnards}
-        \end{figure}
-        
         \subsection{Block Summary}
         \par The termination of \acs{PATH} is brought about by the block summaries, conducted on the facts generated in the \acs{AIL}. A block summary is generated for every block, showing where blocks start and end; useful for external debugging purposes and instruction grouping. The generation of a block summary is a form of block analysis. 
 
@@ -124,32 +103,44 @@
         The detection of a new block triggers the block variables to be generated along with certain facts pertaining to block information.    
         
 
-        \begin{lstlisting}[language=Python,caption= Conditional statement script]
+        \begin{lstlisting}[float=h,language=Python,caption= Conditional statement script,label=lst:condscriptLIst]
             if x>3:
                 #do something#
             else:
                 #do something else#
-        \end{lstlisting}\label{lst:condscriptLIst}
-        %TODO: FIX UP DIAGRAM
-        %TODO: use \usepackage{codeanatomy} for annotations
-        \begin{lstlisting}[language=bash,caption= Bytecode Dissasmbly of Listing \ref{lst:condscriptLIst},numbers=none]
+        \end{lstlisting}
+
+        \begin{tikzpicture}[remember picture]
+            \node(code) [anatomy] at(0,0) {
+            \begin{lstlisting}[language=bash,caption= Bytecode Dissasmbly of Listing \ref{lst:condscriptLIst},numbers=none]
             1           0 LOAD_GLOBAL              0 (x)
                         2 LOAD_CONST               1 (3)
                         4 COMPARE_OP               4 (>)
-                        6 POP_JUMP_IF_FALSE       10
+                        6 !*\cPart{jumpinst1}{POP\_JUMP\_IF\_FALSE}*!       10
 
-            2           8 JUMP_FORWARD             0 (to 10)
+            2           8 !*\cPart{jumpinst2}{JUMP\_FORWARD}*!             0 (to 10)
 
-            4     >>   10 LOAD_CONST               0 (None)
+            4     !*\cPart{varlab}{>>}*!   10 LOAD_CONST               0 (None)
             12          RETURN_VALUE
-        \end{lstlisting}
+            \end{lstlisting}
+            };
+
+            \codeAnnotation{varText1} (2,2.8) {Label}
+            \codeAnnotation{varText2} (12,2.8) {Jump Instruction}
+            \codeAnnotation{varText3} (3,4) {Jump Instruction}
+
+            \draw[->,annotation](varText1) -- (varlab);
+            \draw[->,annotation](varText2) -- (jumpinst2);
+            \draw[->,annotation](varText3) -- (jumpinst1);
+        \end{tikzpicture}
 
         \subsubsection*{Control Flow Generation}
         \par Following the initialization, links between the edges of basic blocks are generated; as shown in Figure \ref{fig:cfhandling}. It is ensured that upon encountering a jump, no redundant relations are created between blocks; taking care to only create relations between linked block edges (i.e: a block's \textit{if} block cannot enter the same \textit{else} block). These type 
         of relations are avoided by creating a unique identifier (\lstinline|block_link_id|); uniquely identifying a link between two blocks.
 
-        \begin{figure}
+        \begin{figure}[H]
             \centering
+            \tiny
             \begin{tikzpicture}
                 [
                     roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
@@ -196,53 +187,44 @@
         \section{\acs{IR} Generation}
         \label{sec:irgen}
         \par The \acs{IR} that \acs{PATH} creates is intended to reduce the engineering complexity for further program analysis. The complex task of recording variables that are consumed and created in a more concise form
-        was needed, so as to resolve the tedious task of manually keeping note of all stack operations. \acs{PATH} offers this functionality for two primary operation subtypes:
+        was needed, so as to resolve the tedious task of manually keeping note of all stack operations. \acs{PATH} currently offers this functionality for three primary operation subtypes:
         \begin{enumerate}
             \item Binary Operation Binding
-            %\item Function Construction Binding %%TODO: remove??
             \item Function Calling Binding
+            \item Method Loading Binding
+            \item Return Value Binding
         \end{enumerate}
-        %TODO:CHANGE AS IR CHANGES
         Providing a standardized representation for the cases above greatly simplifies the final representation of a program. \acs{IR} generation takes a \acs{III} approach; following a sequential iterative generational pattern.
         \begin{description}
-            \item[Binary Operation Binding] takes the arguments from the operation, binding them to a variable, summarizing a binary operation as follows: 
-            \begin{lstlisting}[language=bash,caption=Binary Operation Binding Syntax,numbers=none]
+            \item[Binary Operation Binding] takes the arguments from a binary operation (see \nameref{table:opcode_table}), binding them to the variable specified, summarizing a binary operation as shown in Listing \ref{lst:binopIR}.
+            
+            \begin{lstlisting}[language=bash,caption=Binary Operation Binding Syntax w/variable,numbers=none,label=lst:binopIR]
 <inst_id> <var_id> = <inst_name> <arg1> <operation> <arg2>
+            \end{lstlisting}
+
+            Binary operations which do not have a variable bound to them produce the \acs{IR} shown in Listing \ref{lst:binopIRnovar}
+
+            \begin{lstlisting}[language=bash,caption=Binary Operation Binding Syntax w/no variable,numbers=none,label=lst:binopIRnovar]
+<inst_id> <inst_name> <arg1> <operation> <arg2>
             \end{lstlisting}
 
             \item[Function Calling Binding] takes the function and arguments passed to the said function, binding them to the function identifier, indicated by a succeeding \lstinline|STORE_FAST| instruction. This is shown below.
             \begin{lstlisting}[language=bash, caption=Function Calling Binding,numbers=none]
-<inst_id> <func_id> = CALL_FUNCTION <arg1> ... <argN>
+<inst_id> <func_id> CALL_FUNCTION <function_name><arg1> ... <argN>
+            \end{lstlisting}
+        
+            \item[Method Loading Binding] takes any \lstinline|LOAD_METHOD| calls, merging them with the arguments of its respective \lstinline|CALL_METHOD|. The latter instruction indicates the number of positional arguments that are passed to the method loaded by the former instruction. 
+            \begin{lstlisting}[language=bash, caption=Method Loading Binding,numbers=none]
+<inst_id><func_id>LOAD_METHOD<function_name><arg1>...<argN>
+            \end{lstlisting}
+            \item[Return Value Binding] simply represents the return value bound with its instruction identifier.
+            \begin{lstlisting}[language=bash, caption=Function Calling Binding,numbers=none]
+                <inst_id> RETURN_VALUE <arg1>
             \end{lstlisting}
         \end{description}
 
-    \pagebreak
+
+
     \section{Technical Implementation}
             
-            \begin{description}
-                \item Global Instruction Variables monitor several attributes of the individual bytecode instructions:
-                \item[prev\_instruction] keeps track of instruction \textsubscript{i-1}. Previous instructions are useful as they allow for proper block creation, and are vital for the generation of control flow graphs.
-                \item[prev\_instruction\_identifier] records the previous instruction identifier. The identifier is stored in a separate variable, and not extracted from \lstinline|prev_instruction| for the sake of brevity. Variable is initialized to {\bfseries-1}, indicating the start of the program.
-                \item[instruction\_list] produces a list of all the bytecode instructions that will be enumerated through in the \acs{AIL}. This list is immediately created to ease the creation of other metrics, such as obtaining the total amount of instructions. 
-                \item[next\_instruction] pulls the next instruction from \lstinline|instruction_list|, if there is a next instruction. This variable is used for correct block handling and \acs{IR} generation.
-                \item[instruction\_size] finds the amount of bytecode instructions there are in the current scope, that need to be read. Variable is initialized.
-                \item[instructions\_offset\_list] stores all the offsets of the bytecode instructions. It is interesting to note, that through this dissertation it has been discovered that bytecode instructions are always 2 bytes in size. Each byte is reserved for the opcode and oparg respectively.
-                \item[largest\_bytecode\_offset] stores the largest bytecode offset. This represents the last instruction, and is used to generate an upper limit for the custom line number argument. Variable is initialized.
-                \item[line\_number] monitors the current line number argument of each bytecode instruction. Bytecode instructions do not always have a line number, indicating that the instruction is between line numbers. When an instruction is in such a state, it relies on the custom line number argument. %%TODO: add correct ref
-            \end{description}
-
-            \begin{description}
-                \item Global Block Variables perform a vital role in distinguishing blocks; useful for block analysis.
-                \item[block\_identifier] keeps track of the current instruction block.
-                \item[prev\_block\_identifier] records the previous block identifier. Variable is initialized to {\bfseries-1}, indicating the first block of the program.
-            \end{description}
-
-            \begin{description}
-                \item The following variables form part of the Miscellaneous Variables. These form part of the backbone structure of \acs{PATH}:
-                \item[frame\_stack] acts as a frame stack, having instructions pushed onto and popped off of accordingly. This stack is flushed with every new function call.
-                \item[prev\_frame\_stack] records the previous frame stack, from a previous function call. %%TODO: MAYBE REMOVE...no use
-                \item[block\_stack] acts as a stack, having instructions pushed onto and popped off of accordingly. This stack is flushed with every new block. An interesting insight that was discovered is that Python operates in a way whereby prior to exiting a block, no instructions are left on the stack.
-                \item[prev\_block\_stack] records the previous block stack.
-                \item[tos] stores the value at the top of the stack. Variable is used for convenience.
-                \item[bytecode] stores the disassembled code object.  
-            \end{description}
+           \par The technical implementation is documented within the source code, as inline comments.

@@ -6,22 +6,20 @@
     \par As an increasing number of people are becoming reliant on complex software systems, the lack of security and analysis
     tooling frameworks is unacceptable in this day and age. Such frameworks provide vital insight into software systems;
     allowing further development and refinement of said systems. Core vulnerabilities are exposed, and optimizations are possible.
-    Tools such as Pylint \cite{pylint2021}, and Bandit \cite{bandit2022} already exist in the industry.
+    Tools such as Pylint \cite[]{pylint2021}, and Bandit \cite[]{bandit2022} already exist in the industry.
 
     \section{Preliminary Overview}
     \subsection{Python \& CPython}
-    \andre{Reworked}
-    \par Python is a high-level, object-oriented scripting language \cite{lutz2001programming}, 
-    suited for a wide range of development domains; from text processing \cite{bonta2019comprehensive} to 
-    machine learning \cite{tensorflowTour} to game development \cite{sweigart2012making}. 
-    The language's wide adoption (TIOBE's Language of the Year: 2007, 2010, 2018, 2020, 2021; \cite{tiobe2022index}) 
-    may be attributed to the fact that it is based on the English language \cite{saabith2019python}, 
+    \par Python is a high-level, object-oriented scripting language \cite[]{lutz2001programming}, 
+    suited for a wide range of development domains; from text processing \cite[]{bonta2019comprehensive} to 
+    machine learning \cite[]{tensorflowTour} to game development \cite[]{sweigart2012making}. 
+    The language's wide adoption (TIOBE's Language of the Year: 2007, 2010, 2018, 2020, 2021; \cite[]{tiobe2022index}) 
+    may be attributed to the fact that it is based on the English language \cite[]{saabith2019python}, 
     making it easy to learn; aiding in the production of relatively complex programs. It is used extensively for rapid prototyping and the development of fully-fledged real-world applications.
 
-    \par The predominant and most comprehensive implementation of Python is known as CPython \cite{van2021python}; a bytecode interpreter for Python, written in C.
+    \par The predominant and most comprehensive implementation of Python is known as CPython \cite[]{van2021python}; a bytecode interpreter for Python, written in C.
 
     \subsection{Program Analysis}
-    \andre{Reworked}
     \par Complex programs imply complex behaviours. Such behaviours have to be analysed, as they might
     highlight potential vulnerabilities, and possibly indicate where optimisations can be carried out in the program.
     This area of interest is known as Program Analysis. Program Analysis provides answers to the following questions;
@@ -30,37 +28,32 @@
         \item Is the provided code free of errors?
         \item How does data flow through the program \& in what order do instructions get executed (Control-Flow)?
     \end{itemize}
-    \andre{Reworked}
     \par Naturally, as an increasing amount of modern-day systems and frameworks are developed in Python, the need for conducting program analysis on these systems is ever-growing.
     There are two main approaches to program analysis; Dynamic Program Analysis \& Static Program Analysis. Dynamic analysis is the testing and evaluation of 
     an application during runtime, whilst static analysis is the testing and evaluation of an application by examining the code, producing facts and deducing
-    possible errors in the program from the facts produced; without code execution \cite{intel2013analysis}. Since all (significant) properties of the 
-    behaviour of programs written in today's programming languages are mathematically undecidable \cite{rice1953classes}, one must involve approximation
+    possible errors in the program from the facts produced; without code execution \cite[]{intel2013analysis}. Since all (significant) properties of the 
+    behaviour of programs written in today's programming languages are mathematically undecidable \cite[]{rice1953classes}, one must involve approximation
     for an accurate analysis of programs. This kind of analysis cannot be carried out by a Dynamic analysis as carrying out a runtime
-    analysis only reveals errors, but does not show the absence of errors \cite{moller2012static}; being the primary motivation behind Static analysis. With the 
+    analysis only reveals errors, but does not show the absence of errors \cite[]{moller2012static}; being the primary motivation behind Static analysis. With the 
     right kind of approximations, Static analysis provides guarantees regarding the properties of all the possible execution paths
     a program can take, giving it a clear advantage over Dynamic analysis; thus will be the main topic of interest in this paper. 
 
     \section{Proposed Solution}
     \label{sec:propsol}
-    %%TODO: Maybe add some more info...
     \par \acs{PATH} provides general metrics for functions; known as facts, along with a
     standardized IR (Intermediary Representation) for external analysis. \acs{PATH} also creates a Control Flow Graph for flow analysis.
 
         \subsection{Aims \& Objectives}
-        \andre{Reworked}
         \par The aim of this dissertation is the production of an easily implementable analytical tool (\acs{PATH}) for existing software systems.
-        The tool is to be used on Python V3.10 \cite{van2021python} systems which are interpreted with the CPython \cite{van2021python} interpreter. It needs 
+        The tool is to be used on Python V3.10 \cite[]{van2021python} systems which are interpreted with the CPython \cite[]{van2021python} interpreter. It needs 
         to scale up to larger systems and still provide accurate metrics. The analytical tool must also generate a standardized IR of the functions 
         present in the system that are analysed. The standardized generated IR has to summarize the block analysis done by \acs{PATH}. 
         \par The creation of this tool is vital as there is a lack of security and analysis tooling, for what is the world's most used programming language 
-        \cite{tiobe2022index}; giving developers increased freedom of choice when having to choose an analysis framework for their projects.
+        \cite[]{tiobe2022index}; giving developers increased freedom of choice when having to choose an analysis framework for their projects.
         
-
-
     \section{Document Structure}
     This paper is composed of five chapters; broken down in the following manner:
-    \par  \par Chapter 1 contains the introductory content, along with a brief overview of the technologies and ideas explored further
+   \par Chapter 1 contains the introductory content, along with a brief overview of the technologies and ideas explored further
     along in this paper. The introduction also gives a run-down of the main objectives met in this project.
     \par Chapter 2 gives an in-depth literature review of the content briefly touched upon in the introductory chapter [Chapter 1]. The literature review
     consists of (but is not limited to) the following works; Python, the uses of Python, Python's bytecode \& CPython's \textit{ceval.c} interpreter, and Static Analysis Tooling.  
@@ -70,16 +63,8 @@
     \par Chapter 5 presents the conclusions of the project and any suggestions for any possible further work.
 
     \section{Contributions}
-    \andre{new}
-    \par A.T carried out the reverse engineering of the individual CPython bytecodes; observing their effect on the value stack. These operations are concisely noted
+    \par We carried out the reverse engineering of the individual CPython bytecodes; observing their effect on the value stack. These operations are concisely noted
     in the \nameref{table:opcode_table}.
-    \par A.T automated the production of facts from Python functions, expediting different analyses of functions.
-    \par A.T standardized the generation of an IR; exposing to the user for better understanding of function behaviours. Alongside IR generation, control flow with functions
-    is indicated by a Control-Flow graph. 
-
-
-
-    %\subsection{Showing the Use of Acronyms}
-
-    %In the early nineties, \acs{GSM} was deployed in many European countries. \ac{GSM} offered for the first time international roaming for mobile subscribers. The \acs{GSM}’s use of \ac{TDMA} as its communication standard was debated at length. And every now and then there are big discussion whether \ac{CDMA} should have been chosen over \ac{TDMA}.
-    %If you want to know more about \acf{GSM}, \acf{TDMA}, \acf{CDMA} and other acronyms, just read a book about mobile communication. Just to mention it: There is another \ac{UA}, for testing.
+    \par We automated the production of facts from Python functions, expediting different analyses of functions.
+    \par We standardized the generation of an IR; exposing to the user for better understanding of function behaviours. Alongside IR generation, control flow with functions
+    is indicated by a Control-Flow graph.

@@ -36,8 +36,8 @@ from file_handler import file_handler
 
 from functions import addition as test_func
 from tests.opcode import test_BINARY_SUBTRACTION as opcode_function
-from tests.logic import test_CALL_FUNCTION as logic_function
-from tests.samplePrograms import P17_EvenOdd as program_function
+from tests.logic import test_BASIC_BLOCKS as logic_function
+from tests.samplePrograms import P61_AddressBook as program_function
 #from project import functions
 
 import types
@@ -495,7 +495,7 @@ def get_pushes(i,instruction_arg):
         'JUMP_IF_FALSE_OR_POP':0,
         'JUMP_ABSOLUTE':0,
         
-        'FOR_ITER':0,
+        'FOR_ITER':1, #TODO: for_iter pushes 1 only if prev instruction is get_iter
         'LOAD_GLOBAL':1,
         'LOAD_FAST':1,
         'STORE_FAST':0,
@@ -693,7 +693,7 @@ def get_pops(i,instruction_arg,tos):
         'JUMP_IF_FALSE_OR_POP':JUMP_IF_FALSE_OR_POP_VAL,
         'JUMP_ABSOLUTE':0,
         
-        'FOR_ITER':1,
+        'FOR_ITER':0, #TODO: for_iter pops 1 if prev instruciton is not get_iter...implement
         'LOAD_GLOBAL':0,
 
         'LOAD_FAST':0,
@@ -877,9 +877,9 @@ def main(function):
     frame_stack = []
     prev_frame_stack = []
 
-    # holds the current block stack. stack is defined PER BLOCK
-    block_stack = []
-    prev_block_stack = []
+    # holds the current block stack. stack is defined PER BASIC BLOCK
+    block_stack = list()
+    prev_block_stack = list()
 
     # global vars
     NORMAL_BLOCK_TYPE = 'NORMAL_BLOCK_TYPE'
@@ -921,13 +921,15 @@ def main(function):
     ##BLOCK RELATIONS##
 
     block_to_block=set()
-    block_output_contents=set()
-    block_input_contents=set()
+    block_output_contents=list()
+    block_input_contents=list()
     block_summary=set()
     block_type=set()
 
     ##SIMPLE IR##
     simple_statement_ir=list()
+
+    call_functions = set()
 
     ############################################
             ##DICTIONARY OF RELATIONS##
@@ -965,7 +967,9 @@ def main(function):
         # if identifier cannot be connected to an else identifier in the cfg 
         Block_Type = block_type, #set(Block_ID:int, Block_Type: blockType, Block_Link_)
 
-        Simple_Statement_IR = simple_statement_ir #
+        Simple_Statement_IR = simple_statement_ir,
+
+        Call_Functions=call_functions
     )
     bytecode = dis.Bytecode(function)
     
@@ -1056,9 +1060,6 @@ def main(function):
                         # to determine the edges between branching statements 
                         
                         # handling of the else branch block
-                        #offset_jump_destination = prev_instruction.argval
-                        #index_next_block = instructions_offset_list.index(offset_jump_destination)
-                        #branch_block_identifier = generate_block_identifier_md5(index_next_block,offset_jump_destination)
                         if is_jump_opcode(prev_instruction.opname):
                             
                             # if the previous instruction was a jump opcode, new block is an if section, and offset of 
@@ -1093,24 +1094,34 @@ def main(function):
 
                     # handler for empty blockstack
                     if not block_stack:
-                        block_output_contents.add((None,prev_block_identifier))
-                        block_input_contents.add((None,block_identifier))
+                        block_output_contents.append((None,prev_block_identifier))
+                        block_input_contents.append((None,block_identifier))
 
                     else:    
                         # adding the outputs of the previous block
                         for active_instruction in block_stack:
-                            block_output_contents.add((active_instruction,prev_block_identifier))
+                            block_output_contents.append((active_instruction,prev_block_identifier))
 
                         # adding the inputs of this block
                         for active_instruction in block_stack:
-                            block_input_contents.add((active_instruction,block_identifier))
+                            block_input_contents.append((active_instruction,block_identifier))
 
-                    block_stack.clear()
+                        block_stack.clear()
+
+                        ## List reversing to copy blockstack
+
+                        tmp_list=block_input_contents.copy()
+
+                        for x in range(len(block_input_contents)):
+                            tmp_item=tmp_list[x]
+                            
+                            #check if item pertains to block
+                            if tmp_item[1] == block_identifier:
+                                block_stack.append(tmp_item[0])
+
                     running_pop_delta = 0
 
-                ##TODO:CHECK LOGIC
-                #if not is_new_block: 
-                #    block_stack = stack_handler(block_stack,instruction,instruction_identifier,instruction_arg)
+                block_stack = stack_handler(block_stack,instruction,instruction_identifier,instruction_arg)
 
                 # set the block pop delta
                 running_pop_delta += instruction_pop_delta
@@ -1228,7 +1239,9 @@ def main(function):
                 
                 #TODO: ADD CALL_FUNCTION
                 if instruction.opname == 'CALL_FUNCTION':
-                    pass
+                    #TODO:REMOVE print functions...system specific
+                    #TODO: add args to allow for overloaded functions
+                    call_functions.add((function.co_filename,LAST_LOAD_GLOBAL))
 
                 continue
             else:
@@ -1242,7 +1255,8 @@ def main(function):
             prev_block_identifier = block_identifier
             prev_instruction = instruction
             prev_instruction_identifier = instruction_identifier
-            
+            block_type_1 = type(block_stack)
+            frame_type_1 = type(frame_stack)
             prev_frame_stack = frame_stack.copy()
             prev_block_stack = block_stack.copy()
     
@@ -1275,13 +1289,13 @@ def ir_rep_handler(instruction_identifier,variable_identifier,instruction_name,u
         used_instruction_args.append(None)
 
     if instruction_name == 'BINARY_ADD':
-        if(variable_identifier!=None):
+        if(variable_identifier is not None):
             tuple_string = (str(instruction_identifier) + "\t" + str(variable_identifier) + " = " +str(instruction_name) + "\t" + str(used_instruction_args[1]) + " + " + str(used_instruction_args[0]))
         else:
             tuple_string = (str(instruction_identifier) + "\t" +str(instruction_name) + "\t" + str(used_instruction_args[1]) + " + " + str(used_instruction_args[0]))
             
     elif instruction_name == 'BINARY_SUBTRACT':
-        if(variable_identifier!=None):
+        if(variable_identifier is not None):
             tuple_string = (str(instruction_identifier) + "\t" + str(variable_identifier) + " = " +str(instruction_name) + "\t" + str(used_instruction_args[1]) + " - " + str(used_instruction_args[0]))
         else:
             tuple_string = (str(instruction_identifier) + "\t" +str(instruction_name) + "\t" + str(used_instruction_args[1]) + " - " + str(used_instruction_args[0]))
@@ -1293,7 +1307,7 @@ def ir_rep_handler(instruction_identifier,variable_identifier,instruction_name,u
         tuple_string = (str(instruction_identifier) + "\t" +str(instruction_name) + "\t" + str(used_instruction_args[0]))
 
     elif instruction_name == 'CALL_FUNCTION':
-        if used_instruction_args[0]==None:
+        if used_instruction_args[0] is None:
             tuple_string = (str(instruction_identifier) + "\t" + str(instruction_name) + "\t" + str(last_load_global) + "\t" +"NO ARGS")
         else:
             used_instruction_args.reverse()
@@ -1356,7 +1370,9 @@ if __name__ == '__main__':
         print("-------------------")
         print("Starting PATH...")
         print("-------------------")
-        code_object = program_function.evenOdd.__code__
+        #TODO: add functionality to detect class
+        #test_var=program_function.Address
+        code_object = program_function.main.__code__
         print("Analysing: " + code_object.co_filename + " \nFunction name: " + code_object.co_name)
         
         dis.dis(code_object)
@@ -1429,6 +1445,8 @@ if __name__ == '__main__':
         file.save_to_csv_three_tuple_string(out_obj['Block_Summary'],"BlockSummary")
         file.save_to_csv_three_tuple_string(out_obj['Block_Type'],"BlockType")
         #file.save_to_csv(out_obj['Simple_Statement_IR'],"SimpleIR")
+
+        file.save_to_csv(out_obj['Call_Functions'], "FunctionsNotAnalysed")
         
         print("Files saved to: " + os.getcwd() + "/resources")
 
@@ -1481,5 +1499,48 @@ http://unpyc.sourceforge.net/Opcodes.html
 https://www.synopsys.com/blogs/software-security/understanding-python-bytecode/
 https://ntnuopen.ntnu.no/ntnu-xmlui/bitstream/handle/11250/2515371/SimenBragen.pdf?sequence=1
 
+
+    \section{Technical Implementation}
+            
+            begin{description}
+                \item Global Instruction Variables monitor several attributes of the individual bytecode instructions:
+                \item[prev\_instruction] keeps track of instruction textsubscript{i-1}. Previous instructions are useful as they allow for proper block creation, and are vital for the generation of control flow graphs.
+                \item[prev\_instruction\_identifier] records the previous instruction identifier. The identifier is stored in a separate variable, and not extracted from \lstinline|prev_instruction| for the sake of brevity. Variable is initialized to {bfseries-1}, indicating the start of the program.
+                \item[instruction\_list] produces a list of all the bytecode instructions that will be enumerated through in the acs{AIL}. This list is immediately created to ease the creation of other metrics, such as obtaining the total amount of instructions. 
+                \item[next\_instruction] pulls the next instruction from \lstinline|instruction_list|, if there is a next instruction. This variable is used for correct block handling and acs{IR} generation.
+                \item[instruction\_size] finds the amount of bytecode instructions there are in the current scope, that need to be read. Variable is initialized.
+                \item[instructions\_offset\_list] stores all the offsets of the bytecode instructions. It is interesting to note, that through this dissertation it has been discovered that bytecode instructions are always 2 bytes in size. Each byte is reserved for the opcode and oparg respectively.
+                \item[largest\_bytecode\_offset] stores the largest bytecode offset. This represents the last instruction, and is used to generate an upper limit for the custom line number argument. Variable is initialized.
+                \item[line\_number] monitors the current line number argument of each bytecode instruction. Bytecode instructions do not always have a line number, indicating that the instruction is between line numbers. When an instruction is in such a state, it relies on the custom line number argument. %%TODO: add correct ref
+            \end{description}
+
+            begin{description}
+                \item Global Block Variables perform a vital role in distinguishing blocks; useful for block analysis.
+                \item[block\_identifier] keeps track of the current instruction block.
+                \item[prev\_block\_identifier] records the previous block identifier. Variable is initialized to {bfseries-1}, indicating the first block of the program.
+            \end{description}
+
+            begin{description}
+                \item The following variables form part of the Miscellaneous Variables. These form part of the backbone structure of acs{PATH}:
+                \item[frame\_stack] acts as a frame stack, having instructions pushed onto and popped off of accordingly. This stack is flushed with every new function call.
+                \item[prev\_frame\_stack] records the previous frame stack, from a previous function call. %%TODO: MAYBE REMOVE...no use
+                \item[block\_stack] acts as a stack, having instructions pushed onto and popped off of accordingly. This stack is flushed with every new block. An interesting insight that was discovered is that Python operates in a way whereby prior to exiting a block, no instructions are left on the stack.
+                \item[prev\_block\_stack] records the previous block stack.
+                \item[tos] stores the value at the top of the stack. Variable is used for convenience.
+                \item[bytecode] stores the disassembled code object.  
+            \end{description}
+        
+            begin{description}
+                \item The following variables are global constants, used to classify elementary blocks.
+                \item[NORMAL\_BLOCK\_TYPE] represents a normal elementary block.
+                \item[IF\_BLOCK\_TYPE] represents the if branch of a conditional instruction.
+                \item[ELSE\_BLOCK\_TYPE] represents the else branch of a conditional instruction.
+            \end{description}
+
+            begin{description}
+                \item[instruction\_arg] 
+            \end{description}
+
+            andre(FINISH)
 
 '''

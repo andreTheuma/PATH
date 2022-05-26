@@ -131,7 +131,7 @@ class AddressBook(object):
         else:
             print('No Record in database.')
 
-if __name__ == '__main__':
+def main():
     myBook = AddressBook()
     print('Enter 1. To Add Contacts 2. For Searching a Contact 3. For Modifying a Contact 4. To Display Contacts 5. To Exit')
     while True:

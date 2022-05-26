@@ -21,7 +21,7 @@ def csvWrite(filePath, data):
         writer = csv.writer(fd, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
         writer.writerow(data)
 
-if __name__ == '__main__':
+def main():
     # data = ['Firstname', 'Lastname']
     # csvWrite('example.csv', data)
     userInput = input('What is your Fullname? ')

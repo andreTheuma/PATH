@@ -1,2 +1,442 @@
-\chapter{Installation Instructions}
-\blindtext[10]
+\chapter{CPython VM Reference}
+\label{chap:cpythonvmref}
+\section{CPython}
+		\subsection{Overview}
+		\par CPython works transparently, via the \acs{PVM} (visualised in Figure \ref{fig:vm_innards}); an interpreter loop (\textit{ceval.c}) is run and there is no direct translation between the Python code to C \cite[pp.1--2]{aycock1998converting}. 
+		The \acs{PVM} is a stack machine whereby \acs{PVM} instructions retrieve their arguments from the stack, just to be placed back onto the stack after execution of the instruction. The Python compiler generates \acs{PVM} code (a \textit{.pyc} file) for the Python \acs{VM} to execute.
+		The CPython interpreter resembles a classic interpreter with a straightforward algorithm \cite[pp.2--4]{aycock1998converting}: 
+		\begin{itemize}
+			\item[1.] Firstly, the opcode of a VM instruction is fetched, along with any necessary arguments.
+			\item[2.] Secondly, the instruction is then executed.
+			\item[3.] Finally, steps 1-2 are repeated till no more opcodes can be fetched. This is done by raising an exception when an invalid (empty) opcode is found.  
+		\end{itemize}
+
+		\begin{figure}[h]
+		\centering
+			%% flowchart
+			\begin{tikzpicture}
+				%% setupP
+				[
+					roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+					rectanglenode/.style={rectangle, draw=red!60, fill=red!40, very thick, minimum size=20mm},
+					transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},
+				]
+					
+					%% Nodes
+					\node [transparentbox] (box) at (1,0) {};
+					\node [rectanglenode] (compilernode) at (-1.2,0){Compiler};
+					\node [rectanglenode] (vmnode) [right=of compilernode] {Virtual Machine};
+					\node [roundnode] (sourcefile) [left=of box] {Source File};
+					\node [roundnode] (programnode) [right=of box] {Program Execution};
+					\node [rectanglenode] (librarynode) [below=of box] {Library Modules};
+					\node [] (text) at (1.02,2.4) {Python Interpreter};
+					\node [] (textBytecode) at (0.4,1.4){Bytecode Generation};
+					%% Lines
+					\draw[->] (librarynode.north) -- (box.south) ;
+					\draw[->] (sourcefile.east) -- (compilernode.west);
+					\draw[->] (compilernode.east) -- (vmnode.west);
+					\draw[->] (vmnode.east) -- (programnode.west);
+				\end{tikzpicture}
+			
+				\caption{Python Code Execution}
+				\label{fig:python code execution}
+		\end{figure}
+		
+		\begin{figure}[h]
+			\centering    
+			\begin{tikzpicture}
+				[
+					roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+					rectanglenode/.style={rectangle, draw=green!60, fill=green!40, very thick, minimum width=30mm, minimum height = 20mm},
+					transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},
+				]
+				
+				\node [rectanglenode] (parsetree) {Parse Tree};
+				\node [rectanglenode] (ast) [below=of parsetree] at(1.25,-0.5) {Abstract Syntax Tree};
+				\node [rectanglenode] (cfg) [below=of ast] at(2.5,-3.1) {Control Flow Graph};
+				\node [rectanglenode] (bytecode) [below=of cfg] at(3.75,-5.7) {Bytecode};
+
+				\draw[->] (parsetree.west) -- ++(-1,0)|- (ast.west) ; 
+				\draw[->] (ast.west) -- ++(-1,0)|- (cfg.west) ; 
+				\draw[->] (cfg.west) -- ++(-1,0)|- (bytecode.west) ; 
+
+			\end{tikzpicture}
+			
+			\caption{Compiler Innards}
+			\label{fig:compiler_innards}
+		\end{figure}
+
+		\begin{figure}[H]
+			\centering
+			\begin{tikzpicture}
+				[
+					roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+					rectanglenode/.style={rectangle, draw=cyan!60, fill=cyan!20, very thick, minimum width=30mm, minimum height = 20mm},
+					transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},
+				]
+
+				\node [roundnode] (opcode) {NEXTOP()};
+				\node [roundnode] (checkargs) [right=of opcode] {NEXTARG()};
+				\node [rectanglenode] (switch) [below=of opcode] at(2,-2) {Opcode Case Match};
+				\node [] (entrytext) [above=of opcode] {Entry};
+				\node [] (exittext) [below=of switch] at(2,-4) {Exit};
+				\node [align=center] (label1) [below=of switch] at(-1.3,-4.2) {next opcode is not\\present};
+				\node [align=center] (label2) [below=of switch] at(-3.6,-.6) {next opcode\\is present};
+				
+				\draw[-latex] (entrytext) .. controls +(left:.5cm) and +(left:3cm) .. (opcode.north);
+				\draw[-latex] (switch.west) .. controls +(left:1cm) and +(left:3cm) .. (exittext.west);
+				\draw[-latex] (switch.west) .. controls +(left:3.2cm) and +(left:2cm) .. (opcode.west);
+				\draw[-latex] (checkargs.east) to[in=1, out=2] (switch.east);
+				
+				\draw[-latex] (opcode.east) -- (checkargs.west);
+				
+			\end{tikzpicture}
+
+			\caption{VM Innards}
+			\label{fig:vm_innards}
+		\end{figure}
+
+		This simple algorithm is known as the CPython Evaluation Loop. The evaluation loop is formulated as shown in Listing \ref{lst:ceval_loop}\footnote{Actual code differs from what is presented. The source code has been edited as to be more readable and concise.}.
+
+		\begin{lstlisting}[float=h,language=Python,caption= Evaluation Loop,label=lst:ceval_loop]
+			for(**indefinite condition**){
+				oparg=null;
+				opcode = NEXTOP();
+				if(ARGUMENT_PRESENT(opcode)){
+					oparg = NEXTARG();
+				}
+				switch(opcode){
+					case **opcode_name**: 
+						manipulate stack & set variables accordingly
+					...
+					...
+					...
+					default: 
+						raise error
+				}
+			}	
+		\end{lstlisting}
+
+		Evaluation is computed frame by frame (See {\bfseries\nameref{subsec:frames}}), with what is essentially a (very long) switch statement; reading every opcode and delegating accordingly.
+			
+		\subsection{Stacks}
+		\label{subsec:stacks}
+		\par A stack data structure is a dynamic structure that operates with a LIFO policy \cite[]{intro2009algorithms}. Since CPython does not directly interact with
+		the hardware for compilation, it makes both the call stack and stack frames rely on the PVM. In CPython, there is one main stack that the \acs{PVM} requires for proper functionality; the call stack. 
+		The other two stacks (\nameref{subsubsec:value_stack} and \nameref{subsubsec:call_stack}) are essential for the proper computation of any variables that there are in the
+		frame (See {{\bfseries\nameref{subsec:frames}}). Most instructions manipulate the value stack and the call stack \cite[]{general2018stacks}. The nature of CPython stacks is visualised in Figure \ref{fig:stacks_overview}
+			\subsubsection*{Call Stack}
+			\label{subsubsec:call_stack}
+
+			\par The call stack contains call-frames (See {\bfseries\nameref{subsec:frames}}). This is the main structure of the running program.
+			A function call results in a pushed frame onto the call stack, whilst 
+			a return call results in a pop of the function frame off of the stack \cite[]{call2010stack}. A visual representation of a call stack is shown in Figure \ref{fig:call_stack_example}. 
+			In this figure, a sample script can be seen run, step by step, showing the frames being pushed onto the call stack and popped from the call stack.
+			The first frame pushed onto the frame stack is inevitably called the \lstinline|__main__| call frame.
+
+			\begin{figure}
+				\centering
+
+				\begin{lstlisting}[language=Python,caption=Python script, label=lst:callstackexample]
+					def foo():
+						print("Hello")
+					
+					def intermediary():
+						foo()
+						
+					def start():
+						intermediary()
+					
+					start()
+				\end{lstlisting}
+
+				\begin{tikzpicture}
+				[
+					roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+					rectanglenode/.style={rectangle, draw=cyan!60, fill=cyan!20, very thick, minimum width=30mm, minimum height = 10mm},
+					transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},
+				]
+				
+				\node[rectanglenode] (main) at (0,0) {\_\_main\_\_};
+				\node [] (text_init) [above=of main] {Initialization};
+				
+				\node[rectanglenode] (main_1) [right=of main] {\_\_main\_\_};
+				\node[rectanglenode] (start) [above=of main_1] at (4.04,-0.5) {start()};
+				\node [] (text_start) [above=of start] {\lstinline|start()| pushed};
+
+				\node[rectanglenode] (main_2) [right=of main_1] {\_\_main\_\_};
+				\node[rectanglenode] (start_2) [above=of main_2] at (8.085,-0.5) {start()};
+				\node[rectanglenode] (intermediary) [above=of start_2] at(8.085,0.5) {intermediary()};
+				\node [] (text_int) [above=of intermediary] {\lstinline|intermediary()| pushed};
+			
+				\node[rectanglenode] (main_3) [right=of main_2] at (9.40,0){\_\_main\_\_};
+				\node[rectanglenode] (start_3) [above=of main_3] at (11.92,-0.5) {start()};
+				\node[rectanglenode] (intermediary_3) [above=of start_3] at(11.92,0.5) {intermediary()};
+				\node[rectanglenode] (foo) [above=of intermediary_3] at(11.92,1.5) {foo()};
+				\node [] (text_foo) [above=of foo] {\lstinline|foo()| pushed};
+
+				\end{tikzpicture}
+				
+				\vspace{20mm}
+
+				\begin{tikzpicture}
+					[
+						roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+						rectanglenode/.style={rectangle, draw=cyan!60, fill=cyan!20, very thick, minimum width=30mm, minimum height = 10mm},
+						transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},
+					]
+					
+					\node[rectanglenode] (main) at (8.21,0) {\_\_main\_\_};
+					\node [] (text_init) [above=of main] {\lstinline|start()| popped};
+					
+					\node[rectanglenode] (main_1) [right=of main_2] at(1.86,0) {\_\_main\_\_};
+					\node[rectanglenode] (start) [above=of main_1] at (4.38,-0.5) {start()};
+					\node [] (text_start) [above=of start] {\lstinline|intermediary()| popped};
+		
+					\node[rectanglenode] (main_2) [right=of main_3] at (-2.3,0){\_\_main\_\_};
+					\node[rectanglenode] (start_2) [above=of main_2] at (0.215,-0.5) {start()};
+					\node[rectanglenode] (intermediary) [above=of start_2] at(0.215,0.5) {intermediary()};
+					\node [] (text_int) [above=of intermediary] {\lstinline|foo()| popped};
+				
+					\node[rectanglenode] (main_3) at (-3.6,0){\_\_main\_\_};
+					\node[rectanglenode] (start_3) [above=of main_3] at (-3.6,-0.5) {start()};
+					\node[rectanglenode] (intermediary_3) [above=of start_3] at(-3.6,0.5) {intermediary()};
+					\node[rectanglenode] (foo) [above=of intermediary_3] at(-3.6,1.5) {foo()};
+					\node [] (text_foo) [above=of foo] at (-3.6,2.5){\lstinline|foo()| computed};
+		
+				\end{tikzpicture}
+
+				\caption{Simulation of Call Stack running Listing \ref{lst:callstackexample}}
+				\label{fig:call_stack_example}
+
+			\end{figure}
+
+			\subsubsection*{Value Stack}
+			\label{subsubsec:value_stack}
+			\par This stack is also known as the evaluation stack. It is where the manipulation of the object happens when evaluating object-manipulating opcodes.
+			A value stack is found in a call-frame, implying bijectivity. Any manipulations performed on this stack (unless they are namespace related) are independent of other stacks and
+			do not have the permissions to push values on other value stacks.
+			
+			\subsubsection*{Block Stack}
+			\label{subsubsec:block_stack}
+
+			\par The block stack keeps track of different types of control structures, such as; loops, try/except blocks, and with blocks. These structures push entries onto the block stack, which are popped whenever exiting
+			the said structure. The block stack allows the interpreter to keep track of active blocks at any moment
+
+			\begin{figure}
+				\centering
+
+				\begin{tikzpicture}
+					[
+						roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+						rectanglenode/.style={rectangle, draw=cyan!60, fill=cyan!20, very thick, minimum width=30mm, minimum height = 10mm},
+						transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},
+					]
+
+					\node[rectanglenode] (callstack) at (0,0) {Call Stack};
+
+					\node[rectanglenode] (framestack) [right=of callstack] {Frame Stack};
+					\node[rectanglenode] (blockstack) [above=of framestack] at (8,0) {Block Stack};
+					\node[rectanglenode] (valuestack) [below=of framestack] at (8,0){Value Stack};
+					
+
+					\draw[-latex] (callstack) -- (framestack);
+					\draw[-latex] (framestack.east) -- ++(0.2,0)|-  (blockstack.west);
+					\draw[-latex] (framestack.east) -- ++(0.2,0)|-  (valuestack.west);
+
+				\end{tikzpicture}
+
+				\caption{Overview of CPython stacks}
+				\label{fig:stacks_overview}
+			\end{figure}
+
+		\pagebreak
+
+		\subsection{Frames}
+		\label{subsec:frames}
+		\par A frame (call-frame) is an object which represents a current function call (subprogram call); more formally referred to as a code object. It is an internal type containing administrative information useful for debugging and is used
+		by the interpreter \cite[pp.18--19]{van1994python}. Frame objects are tightly coupled with the three main stacks (See {\bfseries\nameref{subsec:stacks}}) by which every frame is linked to another. Every frame object has two frame-specific stacks;
+		value stack (See {\bfseries\nameref{subsubsec:value_stack}}) and the block stack (See {\bfseries\nameref{subsubsec:block_stack}}). Frames are born from function calls, and die when that function is returned.
+		
+			\subsubsection*{Frame Attributes}
+			\par Along with the properties mentioned above, a frame object would have the following attributes:
+			\begin{description}
+				\item [f\_back] points to the previous stack frame object (return address).
+				\item [f\_code] points to the current code object (See {\bfseries\nameref{subsec:code_obj}}) being executed, in the current frame.
+				\item [f\_builtin] points to the builtin symbol table.
+				\item [f\_globals] points to the dictionary used to look up global variables.
+				\item [f\_locals] points to the symbol table used to look up local variables.
+				%\item [f\_valuestack] this is a pointer, which points to the address after the last local variable. TODO:WRONG
+				\item [f\_valuestack] this holds the pointer, pointing to the value of the top of the value stack.
+				\item [f\_lineno] this gives the line number of the frame.
+				\item [f\_lasti] this gives the bytecode instruction offset of the last instruction called.
+				\item [f\_blockstack] contains the block state, and block relations.
+				\item [f\_localsplus] is a dynamic structure that holds any values in the value stack, for evaluation purposes.
+			\end{description}
+
+			These attributes are retrieved from the declaration found in \textit{./Include/frameobject.h}.
+
+			\subsubsection*{Frame Stack}
+			\par The stack frame is a collection of all the current frames in a call-stack-like data structure (See {\bfseries\nameref{subsubsec:call_stack}}).
+			A frame is pushed onto the stack frame for every function call (every function has a unique frame) as shown in Figure \ref{fig:stack_frames}.
+			\par The stack frame contains a frame pointer which is another register that is set to the current stack frame. Frame pointers resolve the issue created 
+			when operations (pushes or pops) are computed on the stack hence changing the stack pointer, invalidating any hard-coded offset addresses that are computed statically, before run-time \cite[]{stack2011csuwm}.
+			With frame pointers, references to the local variables are offsets from the frame pointer, not the stack pointer.
+			\begin{figure}[H]
+				
+				\centering
+				\begin{tikzpicture}
+					[
+						roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=20mm},
+						rectanglenode_main/.style={rectangle, draw=cyan!60, fill=cyan!20, very thick, minimum width=30mm, minimum height = 10mm},
+						rectanglenode_checkFile/.style={rectangle, draw=yellow!60, fill=yellow!20, very thick, minimum width=30mm, minimum height = 10mm},
+						rectanglenode_openFile/.style={rectangle, draw=red!60, fill=red!20, very thick, minimum width=30mm, minimum height = 10mm},
+						rectanglenode_addition/.style={rectangle, draw=orange!60, fill=orange!20, very thick, minimum width=30mm, minimum height = 10mm},
+						transparentbox/.style={rectangle,draw=blue!60, fill=blue!0, ultra thick, minimum width = 75mm, minimum height = 40mm},
+					]
+					
+					
+					\node[rectanglenode_main] (mainfunc) at (0,0) {Main};
+					\node[rectanglenode_checkFile] (func1) [below=of mainfunc] {checkFile};
+					\node[rectanglenode_openFile] (func2) [below=of func1] {openFile};
+					\node[rectanglenode_addition] (func3) [below=of func2] {additionNumbs};
+					
+					\node[rectanglenode_main] (mainfunc_frame1) [right= of mainfunc] at (5,0) {Return Address};
+					\node[rectanglenode_addition] (addition_frame1) [right= of mainfunc] at (5,-1) {Local Variable(z)};
+					\node[rectanglenode_addition] (addition_frame1) [right= of mainfunc] at (5,-2) {Local Variable(y)};
+					\node[rectanglenode_addition] (addition_frame1) [right= of mainfunc] at (5,-3) {Local Variable(x)};
+					\node[rectanglenode_addition] (addition_frame1) [right= of mainfunc] at (5,-4) {Return Address};
+					\node[rectanglenode_openFile] (openFile_frame1) [right= of func1] at(5,-5){Local Variable(filename)};
+					\node[rectanglenode_openFile] (openFile_frame2) [right= of func1] at(5,-6){Parameter("addition\_variables.txt")};
+					\node[rectanglenode_openFile] (openFile_frame3) [right= of func1] at(5,-7){Return Address};
+					\node[rectanglenode_checkFile] (checkFile_frame1) [right= of func1] at(5,-8){Local Variable(filepath)};
+					\node[rectanglenode_checkFile] (checkFile_frame2) [right= of func1] at(5,-9){Parameter(filenamecheck)};
+					
+					\node[] (textfunctions) [above=of mainfunc] {\bfseries{Functions}};
+					\node[] (textstack) [above=of mainfunc_frame1] {\bfseries{Stack Frame}};
+
+				\end{tikzpicture}
+				\caption{Stack frames example}
+				\label{fig:stack_frames}
+			
+			\end{figure}
+
+		\subsection{Code Objects}
+		\label{subsec:code_obj}
+		
+		\par A code object is a low-level detail of the CPython implementation. When parsing Python code, compilation creates a code object for processing on the \acs{PVM}. A code object contains a list of instructions directly interacting with the CPython \acs{VM}; hence coined a low-level detail. Code objects are of the type \lstinline|PyCodeObject|, with each section of the code object representing 
+		a chunk of executable code that has not been bound to a function \cite[]{pythonofficial2022docspycode}. The structure of the type of these code 
+		objects change throughout different CPython versions, thus there is no set composition \cite[]{pythonofficial2022docspycode}. For reference, the source code in Listing \ref{lst:dis_example} produces
+		the code object displayed in Listing \ref{lst:codeobjscript}, following the standard convention shown in Listing \ref{lst:codeobjconv}.
+		
+		\begin{lstlisting}[float=h,language=bash, caption= Code object of Listing \ref{lst:dis_example},numbers=none]
+			<code object addition_numbers at 0x1047f10b0, file "filepath", line 3>
+		\end{lstlisting}\label{lst:codeobjscript}
+		
+		\small
+		\begin{lstlisting}[float=h,language=bash, caption= Code object standard convention,numbers=none]
+			code object <functionName> at <address>, file <path>, line<firstLineNo.>
+		\end{lstlisting}\label{lst:codeobjconv}
+		
+		\normalsize
+
+			\subsubsection*{Disassembler}
+			\par Code objects are expanded by using the \lstinline|dis| module in Python. This module contains several analyses functions which; all of which directly convert the input code object into the desired output \cite[]{pythonofficial2022docsdismodule}.
+			The function that is of a particular interest in this paper is the \lstinline|dis.dis| function which disassembles a code object into its respective bytecodes, alongside other relevant information, as seen in Figure \ref*{lst:dis_example}.
+			When applying the analysis function \lstinline|dis.dis|, the disassembled code object takes the following format for every instruction:
+			
+			\small
+			\begin{lstlisting}[language=bash, caption= Dissasembled instruction convention,numbers=none]
+				<lineNumber><label><instructionOffset><opname><opargs><var>
+			\end{lstlisting}
+			\normalsize
+
+			It is interesting to note that the value for \lstinline|opargs| is computed in little-endian order. Typically, as is shown in ... ,the arguments associated with the instructions are used for 
+			specific stack manipulations. 
+			%%TODO: Maybe add some more detail
+			%%TODO: Add the correct reference section above.
+
+				
+				\begin{lstlisting}[language=Python,caption=Python source code,label=lst:addnossource]
+				        import dis
+				        
+				        def addition_numbers(x,y):
+				            z=x+y
+				            return z
+				       
+				        dis.dis(addition_numbers)
+				\end{lstlisting}
+
+				\begin{lstlisting}[numbers=none, caption=Disassembly of Listing \ref{lst:addnossource}]
+				4    	0 LOAD_FAST        0(x)
+							2 LOAD_FAST        1(y)
+							4 BINARY_ADD
+							6 STORE_FAST       2(z)
+				
+				5		  LOAD_FAST        2(z)
+							10 RETURN_VALUE
+				\end{lstlisting}\label{lst:dis_example}
+%			\end{figure}
+
+			\subsubsection*{Bytecode}
+			\label{subsubsec:bytecode}
+			
+			\par Bytecode is a form of portable code (p-code) executed on a virtual machine. 
+			The introduction of the concept of bytecode came about when a generalized way 
+			 of interpreting complex programming languages was required to simplify information structures, characterizing them in their essentials \cite[]{landin1964mechanical}.
+			 This ideology gave birth to portable code; a generalized form of code, that can cross-compile, assuming that
+			 the Virtual Machine which interpreted the p-code was compatible with the native machine architecture. 
+			 \par In CPython V3.10, there are over 100 low-level bytecode instructions \cite[]{pythonofficial2022docsdismodule}. The classification of bytecode operations is defined below:
+			\begin{itemize}
+				\item[-]Unary instructions.
+				\item[-] Binary instructions.
+				\item[-] Inplace instructions.
+				\item[-] Coroutine instructions.
+				\item[-] Argument instructions.
+				\item[-] Miscellaneous instructions.
+			\end{itemize}
+			
+		\subsection{Execution of Code Objects}
+		The evaluation stage firstly makes use of the public API \lstinline|PyEval_EvalCode()| \cite[lines 716--724]{ceval2022github}, which is used for evaluating a code object created 
+		at the end of the compilation stages (Figure \ref{fig:compiler_innards}). This API constructs an execution frame from the top of the stack by calling \lstinline|_PyEval_EvalCodeWithName()|.
+		The first execution frame constructed must conform to these requirements:
+		\begin{enumerate}
+			\item The resolution of keyword\footnote{A keyword argument is a value that, when passed into a function, is identifiable by a specific parameter name, such as variable assignment.} 
+			and positional arguments\footnote{A positional argument is a value that is passed into a function based on the order in which the parameters were listed during the function definition.}.
+			\item The resolution of *args\footref{footnote:kwargs_args} and **kwargs\footnote{\label{footnote:kwargs_args}*args and **kwargs allow multiple arguments to be passed into a function via the unpacking (*) operator.} 
+			in function definitions.
+			\item The addition of arguments as local variables to the scope (A scope is the membership of a variable to a region).
+			\item The creation of Co-routines and Generators \cite[pp.2--3]{tismer2000continuations}.
+		\end{enumerate} 
+		Code execution in CPython is the evaluation and interpretation of code object. Below, we delve into a more detailed description of frame objects; their creation, and execution \cite[]{real2022python}.
+		
+			\subsubsection*{Thread State Construction}
+			\par Prior to execution, the frame would need to be referenced from a thread. The interpreter allows for many threads to run at any given moment. The thread structure that is created is called 
+			\lstinline|PyThreadState|.
+			
+			\subsubsection*{Frame Construction}
+			\par Upon constructing the frame, the following arguments are required:
+			\begin{description}
+				\item [\_co] A \lstinline|PyCodeObject| (code object).
+				\item [globals] A dictionary relating global variable names with their values.
+				\item [locals] A dictionary relating local variable names with their values.
+			\end{description}
+			It is important to note that there are other arguments that might be used but do not form part of the basic API, thus will not be included.
+
+			\subsubsection*{Keyword \& Positional Argument Handling}
+			\par If the function definition contains a multi-argument keyword argument \footref{footnote:kwargs_args}, a new keyword argument dictionary (\lstinline|kwdict| dictionary) is created in the form of a \lstinline|PyDictObject|.
+			Similarly, if any positional arguments\footref{footnote:kwargs_args} are found they are set as local variables.
+
+			\par The dictionary that was created is now filled with the remaining keyword arguments which do not resolve themselves to positional arguments. This resolution comes after
+			all the other arguments have been unpacked. In addition, missing positional arguments \footnote{Positional arguments that are provided to a function call, but are not in the list of positional arguments.} are 
+			added to the \lstinline|*args|\footref{footnote:kwargs_args} tuple. The same process is followed for the keyword arguments; values are added to the \lstinline|**kwargs| dictionary and not a tuple.
+
+			\subsubsection*{Final Stage}
+			\par Any closure names are added to the code object's list of free variable names, and finally, generators and coroutines are handled in a new frame. In this case, the frame is not pre-evaluated but it is 
+			evaluated only when the generator/coroutine method is called to execute its target.
+
+
+		\subsection{Execution of Frame Objects}
+		\par The local and global variables are added to the frame preceding frame evaluation; handled by \lstinline|_PyEval_EvalFrameDefault()|. 
+		\par\lstinline|_PyEval_EvalFrameDefault()| is the central function which is found in the main execution loop. Anything that CPython executes goes through
+		this function and forms a vital part of interpretation.

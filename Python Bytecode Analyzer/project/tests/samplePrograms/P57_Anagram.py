@@ -15,6 +15,7 @@ def anagram(word, myList):
     	if word != words.lower():
     		if Counter(word) == Counter(words.lower()):
     			anagrams.append(words)
+                
     return anagrams
 
 if __name__ == '__main__':
